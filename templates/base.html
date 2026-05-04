@@ -1,0 +1,33 @@
+{% load tailwind_tags %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}AI Secretary{% endblock %}</title>
+    {% tailwind_css %}
+  </head>
+  <body class="bg-gray-50 text-gray-900 min-h-screen">
+    <!-- Navbar -->
+    <nav
+      class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between"
+    >
+      <span class="font-semibold text-lg">AI Secretary</span>
+      <div class="flex gap-4 text-sm">
+        <a href="#" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+        <a href="#" class="text-gray-600 hover:text-gray-900">Schedule</a>
+        <a href="#" class="text-gray-600 hover:text-gray-900">Logout</a>
+      </div>
+    </nav>
+
+    <!-- Main content -->
+    <main class="max-w-4xl mx-auto px-6 py-10">
+      {% block content %} {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center text-sm text-gray-400 py-6">
+      AI Secretary &copy; 2026
+    </footer>
+  </body>
+</html>
