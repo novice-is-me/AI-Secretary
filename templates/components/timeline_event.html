@@ -1,0 +1,23 @@
+<div class="group relative bg-white/40 hover:bg-white/60 p-6 rounded-lg transition-all duration-300 ease-out-back glass-panel {{ extra_classes }}">
+    <div class="flex justify-between items-start mb-2">
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-{{ color_class|default:'primary' }}"></span>
+            <span class="font-label-sm text-{{ color_class|default:'primary' }} uppercase tracking-wider">{{ category|default:'Google Calendar' }}</span>
+        </div>
+        <span class="font-label-sm text-outline">{{ time_range|default:'09:00 - 11:30' }}</span>
+    </div>
+    <h4 class="font-headline-md text-{{ text_color|default:'primary-container' }} mb-3">{{ title|default:'Strategy Architecture Workshop' }}</h4>
+    <p class="font-body-md text-on-surface-variant {% if avatars %}mb-4{% endif %}">{{ description|default:'A high-focus block for the Q3 roadmap. Avoid notifications during this time.' }}</p>
+    {% if avatars %}
+    <div class="flex items-center gap-3">
+        <div class="flex -space-x-2">
+            {% for avatar in avatars %}
+            <img class="w-6 h-6 rounded-full border-2 border-white" src="{{ avatar }}"/>
+            {% endfor %}
+        </div>
+        {% if extra_people_count %}
+        <span class="text-label-sm text-outline">+ {{ extra_people_count }} others</span>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>

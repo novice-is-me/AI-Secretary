@@ -1,0 +1,6 @@
+<div class="glass-panel {% if padding %}{{ padding }}{% else %}p-6{% endif %} rounded-lg border border-white/40 shadow-xl shadow-primary/5 {{ extra_classes }}">
+    {% if title %}
+        <h3 class="font-headline-md text-primary mb-3">{{ title }}</h3>
+    {% endif %}
+    {{ content|safe }}
+</div>

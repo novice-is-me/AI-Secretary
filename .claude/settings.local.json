@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python -m pip list)"
+      "Bash(python -m pip list)",
+      "mcp__stitch__list_screens"
     ]
   }
 }

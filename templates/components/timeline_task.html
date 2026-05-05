@@ -1,0 +1,11 @@
+<div class="group relative bg-{{ bg_color|default:'secondary-container/30' }} hover:bg-{{ hover_bg_color|default:'secondary-container/40' }} p-6 rounded-lg transition-all duration-300 ease-out-back border-l-4 border-{{ border_color|default:'secondary-container' }} {{ extra_classes }}">
+    <div class="flex justify-between items-start mb-2">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm text-{{ text_color|default:'secondary' }}">{{ icon_name|default:'self_improvement' }}</span>
+            <span class="font-label-sm text-{{ text_color|default:'secondary' }} uppercase tracking-wider">{{ category|default:'Sanctuary Ritual' }}</span>
+        </div>
+        <span class="font-label-sm text-outline">{{ time|default:'11:30' }}</span>
+    </div>
+    <h4 class="font-headline-md text-{{ text_color|default:'secondary' }} mb-2">{{ title|default:'Hydrate & Reset' }}</h4>
+    <p class="font-body-md text-on-surface-variant">{{ description|default:"You've finished your deep work. Take 5 minutes to stretch and drink a glass of water before the next meeting." }}</p>
+</div>

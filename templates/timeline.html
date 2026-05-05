@@ -1,0 +1,273 @@
+{% extends 'base_auth.html' %}
+{% block title %}Timeline | Sanctuary{% endblock %}
+
+{% block extra_head %}
+<style>
+  .glass-panel {
+    background: rgba(251,249,244,0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .timeline-connector {
+    position: absolute;
+    left: 20px; top: 24px; bottom: -32px;
+    width: 1px;
+    border-left: 1px dashed #94A684;
+    opacity: 0.3;
+  }
+  .timeline-line {
+    background-image: linear-gradient(to bottom, #94a684 50%, transparent 50%);
+    background-size: 1px 8px;
+    background-repeat: repeat-y;
+  }
+  .pulse-orb { box-shadow: 0 0 20px rgba(148,166,132,0.4); }
+  .organic-transition { transition: all 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #e4e2dd; border-radius: 10px; }
+
+  /* Desktop: full-height flex layout */
+  @media (min-width: 1024px) {
+    body { display: flex; flex-direction: row; overflow: hidden; height: 100vh; }
+    .tl-sidebar { display: flex !important; }
+    .tl-mobile-header { display: none !important; }
+    .tl-mobile-nav { display: none !important; }
+    .tl-mobile-fab { display: none !important; }
+    .tl-desktop-fab { display: flex !important; }
+    .tl-main { padding-top: 0; }
+  }
+  /* Mobile */
+  @media (max-width: 1023px) {
+    body { display: block; overflow: auto; height: auto; }
+    .tl-sidebar { display: none !important; }
+    .tl-mobile-header { display: flex !important; }
+    .tl-mobile-nav { display: flex !important; }
+    .tl-desktop-fab { display: none !important; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Desktop Sidebar ── -->
+<aside class="tl-sidebar" style="display:none; flex-direction:column; justify-content:space-between; padding:32px 24px; height:100vh; width:256px; border-right:1px solid #e8e4e0; background:#fdfcfb; flex-shrink:0; font-family:'Plus Jakarta Sans',sans-serif; font-size:14px;">
+    <!-- Top: logo + nav wrapped together -->
+    <div>
+        <!-- Logo -->
+        <div style="display:flex; align-items:center; gap:12px; padding:0 8px; margin-bottom:40px;">
+            <div style="width:40px; height:40px; border-radius:50%; background:#94a684; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <span class="material-symbols-outlined" style="color:white; font-variation-settings:'FILL' 1;">spa</span>
+            </div>
+            <div>
+                <div style="font-size:22px; font-weight:600; color:#94A684; line-height:1.2;">Sanctuary</div>
+                <div style="font-size:10px; color:#75786f; letter-spacing:0.12em; text-transform:uppercase;">Calm Companion</div>
+            </div>
+        </div>
+        <!-- Nav -->
+        <nav style="display:flex; flex-direction:column; gap:4px;">
+            <a href="{% url 'huddle' %}" style="display:flex; align-items:center; gap:16px; padding:12px 16px; border-radius:8px; color:#75786f; font-size:14px; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='#f2f0ed'" onmouseout="this.style.background='transparent'">
+                <span class="material-symbols-outlined">chat_bubble</span> Huddle
+            </a>
+            <a href="{% url 'timeline' %}" style="display:flex; align-items:center; gap:16px; padding:12px 16px; color:#94A684; font-weight:700; font-size:14px; border-right:4px solid #94A684; text-decoration:none; background:rgba(148,166,132,0.08); border-radius:8px 0 0 8px;">
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">auto_stories</span> Timeline
+            </a>
+        </nav>
+    </div>
+    <!-- Bottom: user card -->
+    <div style="display:flex; flex-direction:column; gap:12px;">
+        <a href="{% url 'profile' %}" style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#f0eee9; border-radius:12px; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='#e4e2dd'" onmouseout="this.style.background='#f0eee9'">
+            <img id="timelineSidebarProfileImg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBu_xO0f0Ef5cBH9hxdFohRZwzHX-wi4N_yJDq7FHi558ct_BmaAuMnYU6Eef4VHsutSBh7rklwEadzc6uSuXn5BTytIb90dKVIo5J6GZq2tweF4LD4mzEzOmAOD9XECoSA79mBatyOCvWbLKAYwtrcUjFVh66JlhgswtrwSLZAV5mdRJSXh2Tq1clhw_UVs2AqNPvSB-N0UJrhEu3OxkZ_DRMTCbQT-xoQDRKbgguYGsDV1bxk6xRzBZVFElZu1QlfjWdyGDjuhoW8" alt="User" style="width:32px; height:32px; border-radius:50%; object-fit:cover;" />
+            <div style="display:flex; flex-direction:column;">
+                <span style="font-size:14px; font-weight:600; color:#1b1c19;">Alex Rivera</span>
+                <span style="font-size:10px; color:#75786f;">Focus Mode</span>
+            </div>
+        </a>
+    </div>
+</aside>
+
+
+<!-- ── Mobile Top Header ── -->
+<header class="tl-mobile-header" style="display:none; justify-content:space-between; align-items:center; padding:16px 24px; position:fixed; top:0; left:0; right:0; z-index:50; background:rgba(253,252,251,0.85); backdrop-filter:blur(12px);">
+  <div style="display:flex; align-items:center; gap:8px;">
+    <span class="material-symbols-outlined" style="color:#94A684; font-variation-settings:'FILL' 1;">spa</span>
+    <h1 style="font-size:20px; font-weight:700; color:#94A684; margin:0;">Sanctuary</h1>
+  </div>
+  <span class="material-symbols-outlined" style="color:#75786f;">account_circle</span>
+</header>
+
+<!-- ── Main Content ── -->
+<main class="tl-main" style="flex:1; display:flex; flex-direction:column; height:100vh; overflow:hidden; font-family:'Plus Jakarta Sans',sans-serif;">
+
+  <!-- Sticky Header / Toggle -->
+  <div style="position:sticky; top:0; z-index:40; background:rgba(251,249,244,0.85); backdrop-filter:blur(8px); padding:40px 40px 20px; display:flex; align-items:flex-end; justify-content:space-between;">
+    <div>
+      <h2 style="font-size:32px; font-weight:400; color:#1b1c19; margin:0 0 4px; line-height:1.2;" class="tl-heading">Your Flow</h2>
+      <p style="font-size:14px; color:#75786f; margin:0;">Today, September 24</p>
+    </div>
+    <!-- List / Calendar toggle -->
+    <div style="display:flex; background:#eae8e3; border-radius:9999px; padding:4px; gap:4px;">
+      <button id="tl-list-btn" onclick="switchView('list')" style="background:white; color:#536346; padding:8px 20px; border-radius:9999px; border:none; font-size:14px; font-weight:500; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.08); transition:all 0.2s;">List</button>
+      <button id="tl-cal-btn" onclick="switchView('calendar')" style="background:transparent; color:#75786f; padding:8px 20px; border-radius:9999px; border:none; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:all 0.2s;">
+        <span class="material-symbols-outlined" style="font-size:18px; vertical-align:middle;">calendar_today</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Scrollable Timeline Feed -->
+  <div style="flex:1; overflow-y:auto; padding:0 40px 120px;">
+    <div id="tl-list-view" style="max-width:800px; margin:0 auto; position:relative; display:flex; flex-direction:column; gap:32px; padding-top:16px;">
+
+      <!-- Item 1: Brand Refresh Strategy -->
+      <div class="relative flex gap-lg group" style="display:flex; gap:24px; position:relative;">
+        <div class="timeline-connector"></div>
+        <div style="width:48px; height:48px; border-radius:50%; background:#d6e9c3; display:flex; align-items:center; justify-content:center; flex-shrink:0; z-index:10;">
+          <span class="material-symbols-outlined" style="color:#536346; font-size:22px;">lightbulb</span>
+        </div>
+        <div class="organic-transition" style="flex:1; background:#f5f3ee; padding:24px; border-radius:16px; cursor:pointer;" onmouseover="this.style.background='#f0eee9'" onmouseout="this.style.background='#f5f3ee'">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <span style="font-size:12px; color:#75786f; font-weight:500; letter-spacing:0.05em;">09:00 AM — 10:30 AM</span>
+            <span style="background:#cde2f5; color:#516575; font-size:10px; padding:4px 10px; border-radius:9999px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;">Deep Work</span>
+          </div>
+          <h3 style="font-size:24px; font-weight:400; color:#1b1c19; margin:0 0 6px;">Brand Refresh Strategy</h3>
+          <p style="font-size:16px; color:#444840; margin:0; line-height:1.6;">Focus on the typography system and color palette refinement for the Sanctuary project.</p>
+        </div>
+      </div>
+
+      <!-- AI Suggestion: Walk -->
+      <div style="display:flex; gap:24px; padding-left:72px; position:relative;">
+        <div class="timeline-connector"></div>
+        <div style="background:rgba(148,166,132,0.1); border:1px solid rgba(148,166,132,0.25); padding:16px 24px; border-radius:16px; display:flex; align-items:center; gap:16px; flex:1;">
+          <span class="material-symbols-outlined" style="color:#94a684; font-size:24px;">nature_people</span>
+          <div style="flex:1;">
+            <p style="font-size:14px; font-weight:500; color:#2c3b21; margin:0 0 2px;">You have space for a walk here</p>
+            <p style="font-size:12px; color:#94a684; margin:0;">The weather is a perfect 72°F outside.</p>
+          </div>
+          <button style="background:none; border:none; color:#536346; font-size:14px; font-weight:500; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; text-decoration:underline;">Schedule</button>
+        </div>
+      </div>
+
+      <!-- Item 2: Lunch -->
+      <div style="display:flex; gap:24px; position:relative;">
+        <div class="timeline-connector"></div>
+        <div style="width:48px; height:48px; border-radius:50%; background:#eae8e3; border:2px solid #fbf9f4; display:flex; align-items:center; justify-content:center; flex-shrink:0; z-index:10;">
+          <span class="material-symbols-outlined" style="color:#75786f; font-size:22px;">restaurant</span>
+        </div>
+        <div class="organic-transition" style="flex:1; background:#f5f3ee; padding:24px; border-radius:16px; cursor:pointer;" onmouseover="this.style.background='#f0eee9'" onmouseout="this.style.background='#f5f3ee'">
+          <div style="margin-bottom:8px;">
+            <span style="font-size:12px; color:#75786f; font-weight:500; letter-spacing:0.05em;">12:30 PM — 01:30 PM</span>
+          </div>
+          <h3 style="font-size:24px; font-weight:400; color:#1b1c19; margin:0 0 6px;">Lunch with Sarah</h3>
+          <p style="font-size:16px; color:#444840; margin:0; line-height:1.6;">At The Green Kitchen. Discussing the upcoming garden retreat.</p>
+        </div>
+      </div>
+
+      <!-- Item 3: Priority -->
+      <div style="display:flex; gap:24px; position:relative;">
+        <div class="timeline-connector"></div>
+        <div style="width:48px; height:48px; border-radius:50%; background:#536346; display:flex; align-items:center; justify-content:center; flex-shrink:0; z-index:10; box-shadow:0 4px 16px rgba(83,99,70,0.25);">
+          <span class="material-symbols-outlined" style="color:white; font-size:22px; font-variation-settings:'FILL' 1;">event_available</span>
+        </div>
+        <div class="organic-transition" style="flex:1; background:rgba(214,233,195,0.4); border-left:4px solid #536346; padding:24px; border-radius:16px; cursor:pointer;" onmouseover="this.style.background='rgba(214,233,195,0.6)'" onmouseout="this.style.background='rgba(214,233,195,0.4)'">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <span style="font-size:12px; color:#536346; font-weight:500; letter-spacing:0.05em;">02:00 PM — 03:00 PM</span>
+            <span style="background:#536346; color:white; font-size:10px; padding:4px 10px; border-radius:9999px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;">Priority</span>
+          </div>
+          <h3 style="font-size:24px; font-weight:400; color:#2c3b21; margin:0 0 6px;">Board Presentation Review</h3>
+          <p style="font-size:16px; color:#3c4b30; margin:0; line-height:1.6;">Final review of the Q3 performance slides before the 4 PM meeting.</p>
+        </div>
+      </div>
+
+      <!-- Item 4: Yoga -->
+      <div style="display:flex; gap:24px; position:relative;">
+        <div style="width:48px; height:48px; border-radius:50%; background:#eae8e3; display:flex; align-items:center; justify-content:center; flex-shrink:0; z-index:10;">
+          <span class="material-symbols-outlined" style="color:#75786f; font-size:22px;">fitness_center</span>
+        </div>
+        <div class="organic-transition" style="flex:1; background:#f5f3ee; padding:24px; border-radius:16px; cursor:pointer;" onmouseover="this.style.background='#f0eee9'" onmouseout="this.style.background='#f5f3ee'">
+          <div style="margin-bottom:8px;">
+            <span style="font-size:12px; color:#75786f; font-weight:500; letter-spacing:0.05em;">05:30 PM — 06:30 PM</span>
+          </div>
+          <h3 style="font-size:24px; font-weight:400; color:#1b1c19; margin:0 0 6px;">Yoga Session</h3>
+          <p style="font-size:16px; color:#444840; margin:0; line-height:1.6;">Evening flow session to decompress from the work day.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar placeholder view -->
+    <div id="tl-cal-view" style="display:none; max-width:800px; margin:0 auto; padding-top:24px; text-align:center; color:#75786f;">
+      <span class="material-symbols-outlined" style="font-size:64px; opacity:0.3;">calendar_month</span>
+      <p style="font-size:16px; margin-top:16px;">Calendar view coming soon.</p>
+    </div>
+  </div>
+
+</main>
+
+
+<!-- Desktop FAB -->
+<button class="tl-desktop-fab" style="display:none; position:fixed; bottom:120px; right:48px; background:#536346; color:white; padding:18px 28px; border-radius:9999px; border:none; font-size:14px; font-weight:500; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 8px 24px rgba(83,99,70,0.3); align-items:center; gap:8px; z-index:30; transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+  <span class="material-symbols-outlined">add</span> Add Task
+</button>
+
+<!-- Mobile: Floating Secretary Orb -->
+<div style="position:fixed; right:24px; bottom:112px; z-index:40;" class="lg:hidden">
+  <div style="width:56px; height:56px; background:#94a684; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(148,166,132,0.4); border:4px solid rgba(255,255,255,0.5);">
+    <span class="material-symbols-outlined" style="color:white; font-size:24px; font-variation-settings:'FILL' 1;">spa</span>
+  </div>
+</div>
+
+<!-- Mobile Bottom Nav -->
+<nav class="tl-mobile-nav" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:50; justify-content:space-around; align-items:center; padding:8px 16px; background:rgba(255,255,255,0.75); backdrop-filter:blur(20px); margin:0 16px 24px; border-radius:9999px; box-shadow:0 8px 32px rgba(148,166,132,0.12); border:1px solid rgba(255,255,255,0.25);">
+  <a href="{% url 'huddle' %}" style="display:flex; flex-direction:column; align-items:center; color:#767873; text-decoration:none; padding:8px 16px; gap:2px;">
+    <span class="material-symbols-outlined" style="font-size:22px;">chat_bubble</span>
+    <span style="font-size:10px; font-weight:500;">Huddle</span>
+  </a>
+  <a href="{% url 'timeline' %}" style="display:flex; flex-direction:column; align-items:center; background:#94a684; color:white; border-radius:9999px; padding:10px 20px; text-decoration:none; gap:2px;">
+    <span class="material-symbols-outlined" style="font-size:22px; font-variation-settings:'FILL' 1;">auto_stories</span>
+    <span style="font-size:10px; font-weight:500;">Timeline</span>
+  </a>
+  <a href="{% url 'profile' %}" style="display:flex; flex-direction:column; align-items:center; color:#767873; text-decoration:none; padding:8px 16px; gap:2px;">
+    <span class="material-symbols-outlined" style="font-size:22px;">person</span>
+    <span style="font-size:10px; font-weight:500;">Profile</span>
+  </a>
+</nav>
+
+<style>
+/* Mobile overrides */
+@media (max-width: 1023px) {
+  .tl-main { height: auto !important; overflow: visible !important; padding-top: 72px; }
+  .tl-main > div:first-child { padding: 20px 20px 12px !important; }
+  .tl-main > div:nth-child(2) { overflow: visible !important; padding: 0 20px 160px !important; }
+  .tl-heading { font-size: 24px !important; }
+}
+</style>
+
+<script>
+function switchView(v) {
+  const list = document.getElementById('tl-list-view');
+  const cal  = document.getElementById('tl-cal-view');
+  const lb   = document.getElementById('tl-list-btn');
+  const cb   = document.getElementById('tl-cal-btn');
+  if (v === 'list') {
+    list.style.display = 'flex';
+    cal.style.display  = 'none';
+    lb.style.background = 'white'; lb.style.color = '#536346';
+    cb.style.background = 'transparent'; cb.style.color = '#75786f';
+  } else {
+    list.style.display = 'none';
+    cal.style.display  = 'block';
+    lb.style.background = 'transparent'; lb.style.color = '#75786f';
+    cb.style.background = 'white'; cb.style.color = '#536346';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Load profile picture from localStorage
+    const savedImage = localStorage.getItem('sanctuary_profile_pic');
+    if (savedImage) {
+        const timelineSidebarProfileImg = document.getElementById('timelineSidebarProfileImg');
+        if (timelineSidebarProfileImg) {
+            timelineSidebarProfileImg.src = savedImage;
+        }
+    }
+});
+</script>
+{% endblock %}

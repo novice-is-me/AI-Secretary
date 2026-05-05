@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#536346",
+                    "on-tertiary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "error": "#ba1a1a",
+                    "background": "#fbf9f4",
+                    "primary-fixed-dim": "#bacca8",
+                    "surface-variant": "#e4e2dd",
+                    "secondary-fixed-dim": "#b4c9db",
+                    "primary-fixed": "#d6e9c3",
+                    "outline": "#75786f",
+                    "surface-dim": "#dbdad5",
+                    "inverse-surface": "#30312e",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#94a684",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-bright": "#fbf9f4",
+                    "surface-container-highest": "#e4e2dd",
+                    "secondary-container": "#cde2f5",
+                    "on-surface-variant": "#444840",
+                    "outline-variant": "#c5c8bd",
+                    "inverse-primary": "#bacca8",
+                    "secondary": "#4d6171",
+                    "on-secondary-container": "#516575",
+                    "on-tertiary-fixed-variant": "#4c463e",
+                    "on-secondary-fixed": "#071e2b",
+                    "tertiary": "#645d55",
+                    "surface-container-low": "#f5f3ee",
+                    "on-tertiary-container": "#3c362f",
+                    "secondary-fixed": "#d0e5f8",
+                    "tertiary-container": "#a79f95",
+                    "surface-tint": "#536346",
+                    "on-primary-container": "#2c3b21",
+                    "on-background": "#1b1c19",
+                    "on-secondary-fixed-variant": "#354958",
+                    "on-tertiary-fixed": "#1f1b14",
+                    "on-secondary": "#ffffff",
+                    "inverse-on-surface": "#f2f1ec",
+                    "on-primary-fixed": "#111f08",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#ebe1d6",
+                    "surface-container": "#f0eee9",
+                    "surface-container-high": "#eae8e3",
+                    "surface": "#fbf9f4",
+                    "tertiary-fixed-dim": "#cec5ba",
+                    "on-surface": "#1b1c19",
+                    "on-primary-fixed-variant": "#3c4b30",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xxl": "64px",
+                    "xl": "40px",
+                    "md": "16px",
+                    "unit": "4px",
+                    "sm": "8px",
+                    "timeline-gap": "32px",
+                    "xs": "4px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(251, 249, 244, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .timeline-connector::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: repeating-linear-gradient(to bottom, transparent, transparent 4px, #94a684 4px, #94a684 8px);
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed overflow-hidden">
+<div class="flex h-screen w-full">
+<!-- SideNavBar - JSON Data Implementation -->
+<aside class="h-screen w-64 border-r border-[#e8e4e0] bg-[#fdfcfb] hidden lg:flex flex-col justify-between py-8 px-6">
+<div class="space-y-12">
+<div class="flex flex-col">
+<span class="text-2xl font-semibold text-[#94A684] tracking-tight">Sanctuary</span>
+<span class="font-label-sm text-xs text-[#767873] mt-1">Calm Companion</span>
+</div>
+<nav class="space-y-4">
+<a class="flex items-center gap-4 py-3 px-4 rounded-lg text-[#767873] hover:bg-[#f2f0ed] transition-colors group" href="#">
+<span class="material-symbols-outlined text-lg">chat_bubble</span>
+<span class="font-label-md">Huddle</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-4 rounded-lg text-[#94A684] font-bold border-r-4 border-[#94A684] bg-[#f2f0ed] transition-colors group" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
+<span class="font-label-md">Timeline</span>
+</a>
+</nav>
+</div>
+<div class="space-y-6">
+<a class="flex items-center gap-4 py-3 px-4 rounded-lg text-[#767873] hover:bg-[#f2f0ed] transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">settings</span>
+<span class="font-label-md">Settings</span>
+</a>
+<div class="flex items-center gap-3 px-4 py-2 border-t border-[#e8e4e0] pt-6">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center">
+<img alt="User Profile" class="w-full h-full rounded-full object-cover" data-alt="A warm, soft-focus portrait of a professional woman in a serene environment. The lighting is natural and gentle, highlighting a calm and friendly expression. The overall aesthetic is clean and high-end, perfectly matching a minimalist digital sanctuary theme with organic, earthy tones and a peaceful mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxk2cn2Lz5-fbn1dH_3l4TDnoYIH_eoihYafEQWGG0dZreRG2tdYlQcLhcnxGE0HO2ffQwGksZreb0ov1FRYTwI8y4R-WWdCFz0CJ3dWcYDqWx2BuFojbM_Mq0MOjwQfB2fGW5lOLo_tQPGH2nG27lqX4faKxTrvHxRVu60_Mxuvf5XKvT77MAucfXXT0wdMRmwDcmvXZU9Jh4ZMzWaimp-7S87c4OhIrj_AO6NqY9PbiCYB7AAMCcUuWtEdE91nOo8tIAAAqP5b7b"/>
+</div>
+<div class="flex flex-col">
+<span class="text-label-md font-bold">Elena</span>
+<span class="text-[10px] text-outline">Personal Workspace</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 h-screen overflow-y-auto relative bg-surface-bright custom-scrollbar">
+<!-- TopNavBar (Mobile Only Logic - Hidden on LG) -->
+<header class="lg:hidden flex justify-between items-center px-6 py-4 w-full fixed top-0 z-50 bg-[#fdfcfb]/80 backdrop-blur-md">
+<span class="text-xl font-bold text-[#94A684]">Sanctuary</span>
+<span class="material-symbols-outlined text-[#94A684]">account_circle</span>
+</header>
+<div class="max-w-4xl mx-auto px-6 py-12 lg:pt-16 pb-32">
+<!-- Header / Filter Bar -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+<div>
+<h1 class="font-display-lg text-display-lg text-on-surface">Your Timeline</h1>
+<p class="font-body-md text-on-surface-variant mt-2">A unified path for your days and thoughts.</p>
+</div>
+<div class="flex items-center gap-2 bg-surface-container rounded-full p-1 self-start">
+<button class="px-6 py-2 rounded-full font-label-md text-primary font-semibold bg-surface-container-lowest shadow-sm">Calendar</button>
+<button class="px-6 py-2 rounded-full font-label-md text-on-surface-variant hover:text-primary transition-colors">Journal</button>
+</div>
+</div>
+<!-- Timeline Section -->
+<div class="relative space-y-timeline-gap">
+<!-- Day Header -->
+<div class="flex items-center gap-6 mb-8">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-white font-bold">14</div>
+<div>
+<h3 class="font-headline-md text-on-surface">Tuesday, May 14</h3>
+<p class="text-label-sm text-outline uppercase tracking-widest">Focus: Deep Work &amp; Restoration</p>
+</div>
+</div>
+<div class="relative pl-12 space-y-8 timeline-connector">
+<!-- Calendar Event: Work Block -->
+<div class="group relative bg-white/40 hover:bg-white/60 p-6 rounded-lg transition-all duration-300 ease-out-back glass-panel">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-label-sm text-primary uppercase tracking-wider">Google Calendar</span>
+</div>
+<span class="font-label-sm text-outline">09:00 - 11:30</span>
+</div>
+<h4 class="font-headline-md text-primary-container mb-3">Strategy Architecture Workshop</h4>
+<p class="font-body-md text-on-surface-variant mb-4">A high-focus block for the Q3 roadmap. Avoid notifications during this time.</p>
+<div class="flex items-center gap-3">
+<div class="flex -space-x-2">
+<img class="w-6 h-6 rounded-full border-2 border-white" data-alt="Close-up portrait of a male professional with a confident and serene expression. The setting is bright and modern with soft natural lighting. The visual style is minimal and sophisticated, incorporating warm neutral tones consistent with a premium productivity application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCljCcjCkO-Bxw_WW0AoDW-Pnh4ZEBCoefOF9Rof3zvCh3qYxCZr1SzaiUdjfRpqltHiCHlHEp4rgEAI1dDvWJPncmQNN0DVbUSnchIV1fdqHEFnoiuNQv1QduPgt6PwwIoT34s0i9_wR1k9J9DdUtcX9S8gKTScDhm7zUQ93fdcnHydi43SZylUF_zLTGvlzTePQhF6shHyu83X05g6PsOtYVxDPQm14dEr7YgSZrImMUOaHz53gFo2NZCC-UWhS9Xg2Lk6IGn5OGl"/>
+<img class="w-6 h-6 rounded-full border-2 border-white" data-alt="Close-up portrait of a female professional smiling gently. The lighting is diffused and pleasant, emphasizing a welcoming and collaborative atmosphere. The aesthetic aligns with a high-end digital sanctuary, using soft focus backgrounds and a calm color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDehqQ9Ivk7PEL9A-cfxRRQMkLrw2YsXyN4flqHPKh0hmLuNxOeNBkx6DovQ6sJnrD2NNREtw_YHhEagEDv5xjaeqNyrRVF79quZOHRnf6wXSNxCCVmKn3eo3QxsZfE45fpoEaDLUYhd_X581edVndQMWGm4V_gM6VqYFO26KNUwux_IKunnpwBsm5UstsEzJXaT-TTJGoOIPkKLi6wOepQHekLX7OOgvSXNgrgtbc6yjV_8rSbV3oN8NsNqGFErBSED_Or8KTkwZjM"/>
+</div>
+<span class="text-label-sm text-outline">+ 4 others</span>
+</div>
+</div>
+<!-- Task: Sanctuary Nudge -->
+<div class="group relative bg-secondary-container/30 hover:bg-secondary-container/40 p-6 rounded-lg transition-all duration-300 ease-out-back border-l-4 border-secondary-container">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-secondary">self_improvement</span>
+<span class="font-label-sm text-secondary uppercase tracking-wider">Sanctuary Ritual</span>
+</div>
+<span class="font-label-sm text-outline">11:30</span>
+</div>
+<h4 class="font-headline-md text-secondary mb-2">Hydrate &amp; Reset</h4>
+<p class="font-body-md text-on-surface-variant">You've finished your deep work. Take 5 minutes to stretch and drink a glass of water before the next meeting.</p>
+</div>
+<!-- Calendar Event: Lunch -->
+<div class="group relative bg-white/40 hover:bg-white/60 p-6 rounded-lg transition-all duration-300 glass-panel">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
+<span class="font-label-sm text-tertiary uppercase tracking-wider">Personal</span>
+</div>
+<span class="font-label-sm text-outline">12:30 - 13:30</span>
+</div>
+<h4 class="font-headline-md text-tertiary-container">Mindful Lunch Break</h4>
+<p class="font-body-md text-on-surface-variant">Step away from the screen. Nature walk suggested.</p>
+</div>
+<!-- Task: Critical Reminder -->
+<div class="group relative bg-surface-container-highest/50 p-6 rounded-lg transition-all duration-300">
+<div class="flex items-center gap-4">
+<div class="w-6 h-6 rounded-full border-2 border-outline-variant flex items-center justify-center group-hover:border-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-xs text-transparent group-hover:text-primary">check</span>
+</div>
+<div>
+<h4 class="font-body-lg text-on-surface">Review client proposal drafts</h4>
+<div class="flex gap-2 mt-2">
+<span class="px-3 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed text-[10px] uppercase font-bold tracking-tighter">Drafts</span>
+<span class="px-3 py-0.5 rounded-full bg-surface-container-high text-outline text-[10px] uppercase font-bold tracking-tighter">15 min</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Future Day Preview -->
+<div class="flex items-center gap-6 pt-12 opacity-50">
+<div class="w-10 h-10 rounded-full border-2 border-outline-variant flex items-center justify-center text-outline font-bold">15</div>
+<div>
+<h3 class="font-headline-md text-on-surface">Wednesday, May 15</h3>
+</div>
+</div>
+</div>
+</div>
+<!-- The "Secretary" Presence (Orb) -->
+<div class="fixed bottom-12 right-12 group cursor-pointer">
+<div class="relative">
+<div class="absolute -inset-4 bg-primary-container/20 rounded-full blur-xl animate-pulse"></div>
+<div class="relative w-16 h-16 rounded-full bg-gradient-to-br from-primary-container to-primary shadow-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-500 ease-out-back">
+<span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+</div>
+<div class="absolute bottom-full right-0 mb-6 w-64 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+<div class="glass-panel p-4 rounded-xl shadow-xl shadow-primary/10 border border-white/20">
+<p class="font-body-md text-primary text-sm">"Your morning is looking clear. Should I schedule your reflection time for 4 PM?"</p>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only Logic) -->
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-4 bg-white/70 backdrop-blur-xl rounded-full mx-4 mb-6 shadow-xl shadow-[#94A684]/10">
+<div class="flex flex-col items-center justify-center text-[#767873] p-3 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="font-label-sm text-[10px]">Huddle</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-[#94A684] text-white rounded-full p-3 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
+<span class="font-label-sm text-[10px]">Timeline</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#767873] p-3 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-sm text-[10px]">Profile</span>
+</div>
+</nav>
+</div>
+</body></html>

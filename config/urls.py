@@ -21,7 +21,27 @@ from django.shortcuts import render
 def home(request):
     return render(request, 'home.html')
 
+def login_view(request):
+    return render(request, 'login.html')
+
+def register_view(request):
+    return render(request, 'register.html')
+
+def huddle_view(request):
+    return render(request, 'huddle.html')
+
+def timeline_view(request):
+    return render(request, 'timeline.html')
+
+def profile_view(request):
+    return render(request, 'profile.html')
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', home),
+    path('', home, name='home'),
+    path('login/', login_view, name='login'),
+    path('register/', register_view, name='register'),
+    path('huddle/', huddle_view, name='huddle'),
+    path('timeline/', timeline_view, name='timeline'),
+    path('profile/', profile_view, name='profile'),
 ]

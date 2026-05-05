@@ -1,0 +1,259 @@
+{% extends 'base_auth.html' %}
+{% block title %}Profile | Sanctuary{% endblock %}
+
+{% block extra_head %}
+<style>
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .cloud-shadow { box-shadow: 0 10px 30px -10px rgba(83, 99, 70, 0.08); }
+  
+  /* Desktop Layout */
+  @media (min-width: 1024px) {
+    body { display: flex; flex-direction: row; overflow: hidden; height: 100vh; }
+    .prof-sidebar { display: flex !important; }
+    .prof-mobile-header { display: none !important; }
+    .prof-mobile-nav { display: none !important; }
+    .prof-main { padding-top: 0 !important; overflow-y: auto; height: 100vh; }
+    .prof-hero { margin-top: 48px; }
+    .prof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; max-width: 1000px; margin: 0 auto; }
+    .prof-fab { display: flex !important; }
+  }
+  
+  /* Mobile Layout */
+  @media (max-width: 1023px) {
+    body { display: block; overflow: auto; height: auto; padding-bottom: 120px; }
+    .prof-sidebar { display: none !important; }
+    .prof-mobile-header { display: flex !important; }
+    .prof-mobile-nav { display: flex !important; }
+    .prof-main { padding-top: 80px !important; }
+    .prof-grid { display: flex; flex-direction: column; gap: 32px; }
+    .prof-fab { display: none !important; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ── Desktop Sidebar ── -->
+<aside class="prof-sidebar" style="display:none; flex-direction:column; justify-content:space-between; padding:32px 24px; height:100vh; width:256px; border-right:1px solid #e8e4e0; background:#fdfcfb; flex-shrink:0; font-family:'Plus Jakarta Sans',sans-serif; font-size:14px;">
+    <!-- Top: logo + nav wrapped together -->
+    <div>
+        <!-- Logo -->
+        <div style="display:flex; align-items:center; gap:12px; padding:0 8px; margin-bottom:40px;">
+            <div style="width:40px; height:40px; border-radius:50%; background:#94a684; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <span class="material-symbols-outlined" style="color:white; font-variation-settings:'FILL' 1;">spa</span>
+            </div>
+            <div>
+                <div style="font-size:22px; font-weight:600; color:#94A684; line-height:1.2;">Sanctuary</div>
+                <div style="font-size:10px; color:#75786f; letter-spacing:0.12em; text-transform:uppercase;">Calm Companion</div>
+            </div>
+        </div>
+        <!-- Nav -->
+        <nav style="display:flex; flex-direction:column; gap:4px;">
+            <a href="{% url 'huddle' %}" style="display:flex; align-items:center; gap:16px; padding:12px 16px; border-radius:8px; color:#75786f; font-size:14px; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='#f2f0ed'" onmouseout="this.style.background='transparent'">
+                <span class="material-symbols-outlined">chat_bubble</span> Huddle
+            </a>
+            <a href="{% url 'timeline' %}" style="display:flex; align-items:center; gap:16px; padding:12px 16px; border-radius:8px; color:#75786f; font-size:14px; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='#f2f0ed'" onmouseout="this.style.background='transparent'">
+                <span class="material-symbols-outlined">auto_stories</span> Timeline
+            </a>
+        </nav>
+    </div>
+    <!-- Bottom: user card -->
+    <div style="display:flex; flex-direction:column; gap:12px;">
+        <a href="{% url 'profile' %}" style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#f0eee9; border-radius:12px; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='#e4e2dd'" onmouseout="this.style.background='#f0eee9'">
+            <img id="sidebarProfileImg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBu_xO0f0Ef5cBH9hxdFohRZwzHX-wi4N_yJDq7FHi558ct_BmaAuMnYU6Eef4VHsutSBh7rklwEadzc6uSuXn5BTytIb90dKVIo5J6GZq2tweF4LD4mzEzOmAOD9XECoSA79mBatyOCvWbLKAYwtrcUjFVh66JlhgswtrwSLZAV5mdRJSXh2Tq1clhw_UVs2AqNPvSB-N0UJrhEu3OxkZ_DRMTCbQT-xoQDRKbgguYGsDV1bxk6xRzBZVFElZu1QlfjWdyGDjuhoW8" alt="User" style="width:32px; height:32px; border-radius:50%; object-fit:cover;" />
+            <div style="display:flex; flex-direction:column;">
+                <span style="font-size:14px; font-weight:600; color:#1b1c19;">Alex Rivera</span>
+                <span style="font-size:10px; color:#75786f;">Focus Mode</span>
+            </div>
+        </a>
+    </div>
+</aside>
+
+<!-- ── Mobile Top Header ── -->
+<header class="prof-mobile-header" style="display:none; justify-content:space-between; align-items:center; padding:16px 24px; position:fixed; top:0; left:0; right:0; z-index:50; background:rgba(253,252,251,0.85); backdrop-filter:blur(12px);">
+  <div style="display:flex; align-items:center; gap:8px;">
+    <span class="material-symbols-outlined" style="color:#94A684; font-variation-settings:'FILL' 1;">spa</span>
+    <h1 style="font-size:20px; font-weight:700; color:#94A684; margin:0;">Sanctuary</h1>
+  </div>
+  <span class="material-symbols-outlined" style="color:#75786f;">account_circle</span>
+</header>
+
+<!-- ── Main Content Area ── -->
+<main class="prof-main" style="flex:1; padding:24px 40px; font-family:'Plus Jakarta Sans',sans-serif;">
+  
+  <!-- Profile Hero Section -->
+  <section class="prof-hero" style="display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:40px;">
+    <div style="position:relative; margin-bottom:16px;">
+      <div style="width:128px; height:128px; border-radius:50%; overflow:hidden; border:4px solid white; box-shadow:0 10px 30px -10px rgba(83,99,70,0.15); transition:transform 0.5s ease-out;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        <img id="mainProfileImg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEKKx_LNveGYkwrZFX_FhOd-isF0dMjkcvIQpC13iNpsPh2HD4IOcU7QSW4FM-iiAQX7xfFrqJnJotorPSydNtr3EZkOPqHSq_fpndTO5foeZh0Ikj9Q_jO2wv3CKOpuvON0lTvKj4XJjBVshyon3-ilBgNff0ieS8P6SeOOnhYWU6KNPgitE1W79LQIXRwP_tssPyIIKOKgUnHjp72_YmDF8yxJl9ProCY3G9ZuDEMfCuZp1D2SrPzhRciKxj1n6nTLFCGAFrOodz" alt="Elena Moss" style="width:100%; height:100%; object-fit:cover;" />
+      </div>
+      <button id="editProfilePicBtn" style="position:absolute; bottom:0; right:0; background:#94a684; color:white; width:36px; height:36px; border-radius:50%; border:3px solid #fbf9f4; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+        <span class="material-symbols-outlined" style="font-size:18px;">edit</span>
+      </button>
+      <input type="file" id="profileImageInput" accept="image/*" style="display:none;" />
+    </div>
+    <h1 style="font-size:32px; font-weight:800; color:#1b1c19; margin:0 0 8px; letter-spacing:-0.02em;">Elena Moss</h1>
+    <p style="font-size:18px; color:#75786f; margin:0; font-style:italic;">Curating a life of calm intention</p>
+    
+    <!-- Mobile specific Edit Button -->
+    <button class="lg:hidden" style="margin-top:16px; padding:8px 24px; border:1px solid rgba(117,120,111,0.3); border-radius:9999px; color:#444840; font-size:14px; font-weight:500; background:transparent;">Edit Profile</button>
+  </section>
+
+  <!-- Content Grid -->
+  <div class="prof-grid">
+    
+    <!-- Left: Account Details -->
+    <section style="background:white; padding:24px; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(228,226,221,0.5);">
+      <h2 style="font-size:24px; font-weight:400; color:#1b1c19; margin:0 0 24px;">Account Details</h2>
+      <form style="display:flex; flex-direction:column; gap:16px;">
+        <div>
+          <label style="display:block; font-size:14px; font-weight:500; color:#75786f; margin-bottom:8px;">Full Name</label>
+          <input type="text" value="Elena Moss" style="width:100%; background:#f0eee9; border:none; border-radius:8px; padding:12px 16px; font-size:16px; color:#1b1c19; outline:none;" />
+        </div>
+        <div>
+          <label style="display:block; font-size:14px; font-weight:500; color:#75786f; margin-bottom:8px;">Bio</label>
+          <textarea rows="2" style="width:100%; background:#f0eee9; border:none; border-radius:8px; padding:12px 16px; font-size:16px; color:#1b1c19; outline:none; resize:none;">Curating a life of calm intention</textarea>
+        </div>
+        <div>
+          <label style="display:block; font-size:14px; font-weight:500; color:#75786f; margin-bottom:8px;">Email</label>
+          <input type="email" value="elena.m@gmail.com" style="width:100%; background:#f0eee9; border:none; border-radius:8px; padding:12px 16px; font-size:16px; color:#1b1c19; outline:none;" />
+        </div>
+        <button type="submit" style="margin-top:24px; width:100%; padding:16px; background:#94a684; color:white; border-radius:9999px; font-size:14px; font-weight:600; border:none; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Save Changes</button>
+      </form>
+    </section>
+
+    <!-- Right: Calendar & Sync -->
+    <div style="display:flex; flex-direction:column; gap:32px;">
+      
+      <!-- Sync Card -->
+      <section style="background:white; padding:24px; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(228,226,221,0.5);">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
+          <div style="display:flex; gap:12px; align-items:center;">
+             <!-- Mobile uses an icon outside the card, Desktop puts it inside header. Let's merge -->
+             <div class="lg:hidden" style="background:#94a684; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(148,166,132,0.3);">
+                <span class="material-symbols-outlined" style="font-size:18px;">calendar_today</span>
+             </div>
+             <h2 style="font-size:24px; font-weight:400; color:#1b1c19; margin:0;">Calendar Sync</h2>
+          </div>
+          <span style="background:#E6F4EA; color:#137333; padding:4px 12px; border-radius:9999px; font-size:12px; font-weight:600; display:flex; align-items:center; gap:6px;">
+            <span style="width:6px; height:6px; border-radius:50%; background:#137333;"></span> Active
+          </span>
+        </div>
+        
+        <p class="lg:hidden" style="font-size:16px; color:#444840; margin:0 0 16px; line-height:1.6;">Your Google and Outlook calendars are harmonized. Sanctuary is buffering your transitions.</p>
+
+        <div style="display:flex; flex-direction:column; gap:24px;">
+          <div style="display:flex; align-items:center; gap:16px; padding:16px; background:#f0eee9; border-radius:12px;">
+            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1Dsm3f7Ksfhe3qT6qc7uRTCDSHp6UICbB2PCe1vpARA-ofPUTPT8OOa4Wy8DsVdzUB4edSvSeSJR1iDpd9Yavn-7dz6SNFRMTsXpAiO6Kq792zf-wYIVAO-KAnQ21jxZ_g5nvY5krDF-PQ07W-OInMB2OTf9QT0j1gGL2prRp7okFUsVmJEwOrHNLYoNjc813UsbNkAmqpj-06RTSJSvrEFTZZVwqiaYWAcYCfXjmgve4zSPd4-xoOEGp2iqVnDCDZk8arDn3sYC4" alt="Google" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" />
+            <div style="flex:1;">
+              <p style="font-size:14px; font-weight:600; color:#1b1c19; margin:0;">Google Calendar</p>
+              <p style="font-size:12px; color:#75786f; margin:0;">elena.m@gmail.com</p>
+            </div>
+            <button style="color:#536346; font-size:14px; font-weight:600; background:none; border:none; cursor:pointer;">Manage</button>
+          </div>
+          
+          <div style="display:flex; align-items:center; gap:16px; padding:16px; background:rgba(240,238,233,0.5); border-radius:12px; cursor:pointer;">
+            <div style="width:40px; height:40px; border-radius:50%; background:#fbf9f4; display:flex; align-items:center; justify-content:center;">
+              <span class="material-symbols-outlined" style="color:#75786f;">add</span>
+            </div>
+            <p style="font-size:14px; font-weight:500; color:#75786f; margin:0;">Integrate Outlook...</p>
+          </div>
+        </div>
+
+        <!-- Buffer Summary Block -->
+        <div style="margin-top:40px; padding:24px; background:rgba(205,226,245,0.2); border-radius:12px; border-left:4px solid #cde2f5;">
+          <div style="display:flex; align-items:center; gap:24px; justify-content:space-between;">
+            <div>
+              <h3 style="font-size:14px; font-weight:600; color:#516575; margin:0 0 4px;">Daily Buffer Summary</h3>
+              <p style="font-size:16px; color:rgba(81,101,117,0.8); margin:0 0 8px;">3 Events Buffered Today</p>
+              <p class="lg:hidden" style="font-size:12px; color:#75786f; margin:0 0 8px;">Next: Focus Block at 2:00 PM</p>
+              <a href="{% url 'timeline' %}" style="display:flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:#4d6171; text-decoration:none;">
+                View Timeline <span class="material-symbols-outlined" style="font-size:16px;">arrow_forward</span>
+              </a>
+            </div>
+            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBo22ehSllDBRV68ZGMbufj6fTytP9VojXX3Sp7TLyGH-cpRKt1qi3uZEXQcA8JQps2cRuvbHItxbEPHKBgjxyzFpDht9o36jglBHy6_TUcw_f3zsYeF83Bkf2kDU1Th-8W3Y8VX-_MGIBjaqe9l1QXXYXtRvU-tiYbf9Xh0864W5GE22oTFYNjTTCw6aAIbWQZybhlKmhJLuWPx03Z9xC4PiLNOvmkd1D0vFCVYHmK5FI_atZMxJbQLoDIR33qgAlPvao8S8Gtzm6s" style="width:80px; height:80px; border-radius:8px; object-fit:cover; box-shadow:0 2px 8px rgba(0,0,0,0.05);" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Mobile Companion Pulse -->
+      <div class="lg:hidden" style="display:flex; flex-direction:column; items-center:center; text-align:center; margin-top:24px;">
+        <div style="width:48px; height:48px; background:linear-gradient(to top right, rgba(83,99,70,0.2), rgba(77,97,113,0.1)); border-radius:50%; margin:0 auto 8px; filter:blur(12px); animation:pulse 2s infinite;"></div>
+        <p style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.15em; color:#75786f;">Companion Presence Active</p>
+      </div>
+
+      <p class="hidden lg:block" style="text-align:center; font-size:12px; color:#75786f; margin-top:24px;">Version 2.4.1 — Sanctum AI 2024</p>
+    </div>
+  </div>
+
+</main>
+
+<!-- Desktop Persistent FAB -->
+<div class="prof-fab" style="display:none; position:fixed; bottom:48px; right:48px; z-index:40;">
+  <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(to top right, #94a684, #cde2f5); display:flex; align-items:center; justify-content:center; box-shadow:0 12px 32px rgba(148,166,132,0.4); cursor:pointer; transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+    <div class="glass-panel" style="width:100%; height:100%; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+      <span class="material-symbols-outlined" style="color:white; font-size:24px;">auto_awesome</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Mobile Bottom Nav ── -->
+<nav class="prof-mobile-nav" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:50; justify-content:space-around; align-items:center; padding:8px 16px; background:rgba(255,255,255,0.75); backdrop-filter:blur(20px); margin:0 16px 24px; border-radius:9999px; box-shadow:0 8px 32px rgba(148,166,132,0.12); border:1px solid rgba(255,255,255,0.25);">
+  <a href="{% url 'huddle' %}" style="display:flex; flex-direction:column; align-items:center; color:#767873; text-decoration:none; padding:8px 16px; gap:2px;">
+    <span class="material-symbols-outlined" style="font-size:22px;">chat_bubble</span>
+    <span style="font-size:10px; font-weight:500;">Huddle</span>
+  </a>
+  <a href="{% url 'timeline' %}" style="display:flex; flex-direction:column; align-items:center; color:#767873; text-decoration:none; padding:8px 16px; gap:2px;">
+    <span class="material-symbols-outlined" style="font-size:22px;">auto_stories</span>
+    <span style="font-size:10px; font-weight:500;">Timeline</span>
+  </a>
+  <a href="{% url 'profile' %}" style="display:flex; flex-direction:column; align-items:center; background:#94a684; color:white; border-radius:9999px; padding:10px 20px; text-decoration:none; gap:2px;">
+    <span class="material-symbols-outlined" style="font-size:22px; font-variation-settings:'FILL' 1;">person</span>
+    <span style="font-size:10px; font-weight:500;">Profile</span>
+  </a>
+</nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const mainProfileImg = document.getElementById('mainProfileImg');
+    const sidebarProfileImg = document.getElementById('sidebarProfileImg');
+    const editProfilePicBtn = document.getElementById('editProfilePicBtn');
+    const profileImageInput = document.getElementById('profileImageInput');
+
+    // Load saved image from localStorage on page load
+    const savedImage = localStorage.getItem('sanctuary_profile_pic');
+    if (savedImage) {
+        if (mainProfileImg) mainProfileImg.src = savedImage;
+        if (sidebarProfileImg) sidebarProfileImg.src = savedImage;
+    }
+
+    // Trigger file input when edit button is clicked
+    if (editProfilePicBtn && profileImageInput) {
+        editProfilePicBtn.addEventListener('click', () => {
+            profileImageInput.click();
+        });
+
+        // Handle file selection
+        profileImageInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64Image = e.target.result;
+                    // Update images in DOM
+                    if (mainProfileImg) mainProfileImg.src = base64Image;
+                    if (sidebarProfileImg) sidebarProfileImg.src = base64Image;
+                    // Save to localStorage
+                    localStorage.setItem('sanctuary_profile_pic', base64Image);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+</script>
+
+{% endblock %}
