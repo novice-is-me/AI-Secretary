@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -12,8 +13,16 @@ def home(request):
 
 def login_view(request):
     if request.method == "POST":
-        username = request.POST.get("username")
+        login_input = request.POST.get("email")
         password = request.POST.get("password")
+
+        username = login_input
+
+        try:
+            user_obj = User.objects.get(email=login_input)
+            username = user_obj.username
+        except User.DoesNotExist:
+            pass
 
         user = authenticate(request, username=username, password=password)
 
@@ -22,7 +31,7 @@ def login_view(request):
             return redirect("huddle")
 
         return render(request, "login.html", {
-            "error": "Invalid username or password"
+            "error": "Invalid email or password"
         })
 
     return render(request, "login.html")

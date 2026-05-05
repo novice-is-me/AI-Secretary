@@ -119,7 +119,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/huddle/'
 LOGOUT_REDIRECT_URL = '/'
 
 TAILWIND_APP_NAME = 'theme'
