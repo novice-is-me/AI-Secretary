@@ -17,24 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import render
-
-def home(request):
-    return render(request, 'home.html')
-
-def login_view(request):
-    return render(request, 'login.html')
-
-def register_view(request):
-    return render(request, 'register.html')
-
-def huddle_view(request):
-    return render(request, 'huddle.html')
-
-def timeline_view(request):
-    return render(request, 'timeline.html')
-
-def profile_view(request):
-    return render(request, 'profile.html')
+from core.views import home, login_view, register_view, huddle_view, timeline_view, profile_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
