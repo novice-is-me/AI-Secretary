@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#536346",
+                    "on-tertiary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "error": "#ba1a1a",
+                    "background": "#fbf9f4",
+                    "primary-fixed-dim": "#bacca8",
+                    "surface-variant": "#e4e2dd",
+                    "secondary-fixed-dim": "#b4c9db",
+                    "primary-fixed": "#d6e9c3",
+                    "outline": "#75786f",
+                    "surface-dim": "#dbdad5",
+                    "inverse-surface": "#30312e",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#94a684",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-bright": "#fbf9f4",
+                    "surface-container-highest": "#e4e2dd",
+                    "secondary-container": "#cde2f5",
+                    "on-surface-variant": "#444840",
+                    "outline-variant": "#c5c8bd",
+                    "inverse-primary": "#bacca8",
+                    "secondary": "#4d6171",
+                    "on-secondary-container": "#516575",
+                    "on-tertiary-fixed-variant": "#4c463e",
+                    "on-secondary-fixed": "#071e2b",
+                    "tertiary": "#645d55",
+                    "surface-container-low": "#f5f3ee",
+                    "on-tertiary-container": "#3c362f",
+                    "secondary-fixed": "#d0e5f8",
+                    "tertiary-container": "#a79f95",
+                    "surface-tint": "#536346",
+                    "on-primary-container": "#2c3b21",
+                    "on-background": "#1b1c19",
+                    "on-secondary-fixed-variant": "#354958",
+                    "on-tertiary-fixed": "#1f1b14",
+                    "on-secondary": "#ffffff",
+                    "inverse-on-surface": "#f2f1ec",
+                    "on-primary-fixed": "#111f08",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#ebe1d6",
+                    "surface-container": "#f0eee9",
+                    "surface-container-high": "#eae8e3",
+                    "surface": "#fbf9f4",
+                    "tertiary-fixed-dim": "#cec5ba",
+                    "on-surface": "#1b1c19",
+                    "on-primary-fixed-variant": "#3c4b30",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xxl": "64px",
+                    "xl": "40px",
+                    "md": "16px",
+                    "unit": "4px",
+                    "sm": "8px",
+                    "timeline-gap": "32px",
+                    "xs": "4px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(251, 249, 244, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .organic-pulse {
+            background: radial-gradient(circle, rgba(148, 166, 132, 0.2) 0%, rgba(251, 249, 244, 0) 70%);
+        }
+        .timeline-reading-lane {
+            max-width: 480px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed">
+<main class="min-h-screen flex flex-col lg:flex-row overflow-hidden">
+<!-- Left Side: Serene Brand Image -->
+<section class="relative hidden lg:flex lg:w-1/2 h-full min-h-screen items-center justify-center bg-surface-container overflow-hidden">
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover" data-alt="A peaceful and serene natural setting featuring soft morning light filtering through delicate green leaves and tall grasses. The scene is captured with a shallow depth of field, creating a dreamy and ethereal bokeh effect. The color palette consists of soft sage greens, warm oatmeal neutrals, and airy whites, perfectly aligning with the Sanctuary brand's calm and organic aesthetic. The atmosphere is quiet and contemplative, evoking a sense of mental clarity and focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJMWz9rhbqJ2jUjTZqGkfwNECJ5-pnFUY2jZETLrLgzM8n6B0suk7f9W-bNgP__WcqYtJA9Qn_IBwf1GyDVJHdLG2ZvgCc9nfQvcNba318WP5bGuGeGLYOceTour9DEgLdgV857U16leg9G6aAssglmQI2v8RGZPfc5qjf5CvBBquTLEqzRPG8ZwwTrmwswch49TvyryXfipRy4yu9QwHs3NiFIwHFcXEFITl2rVleavcfTaYDQb2f2T3KaV7VT_ZF91mUhrmqrRP_"/>
+<div class="absolute inset-0 bg-primary/10 mix-blend-multiply"></div>
+</div>
+<!-- Branding Overlay -->
+<div class="relative z-10 glass-panel p-xl rounded-lg text-center max-w-md mx-auto border border-white/20">
+<div class="flex items-center justify-center mb-md">
+<span class="material-symbols-outlined text-primary text-display-lg" data-icon="cloud_done">cloud_done</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-primary mb-sm tracking-tight">Sanctuary</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Your calm companion in a busy world.</p>
+</div>
+<!-- Decorative Organic Orb -->
+<div class="absolute bottom-[-100px] left-[-100px] w-80 h-80 organic-pulse rounded-full blur-3xl opacity-60"></div>
+</section>
+<!-- Right Side: Registration Form -->
+<section class="flex-1 flex flex-col justify-center items-center px-lg py-xxl bg-background relative">
+<!-- Mobile Branding (Hidden on Desktop) -->
+<div class="lg:hidden absolute top-xl left-0 right-0 flex flex-col items-center">
+<span class="material-symbols-outlined text-primary text-headline-lg mb-xs" data-icon="cloud_done">cloud_done</span>
+<span class="font-headline-md text-headline-md text-primary font-bold">Sanctuary</span>
+</div>
+<div class="timeline-reading-lane w-full space-y-xl">
+<!-- Header Section -->
+<header class="space-y-md text-center lg:text-left">
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Create Account</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">We're glad you're here. Take a breath and let's begin your focus journey together.</p>
+</header>
+<!-- Form Section -->
+<form class="space-y-lg" onsubmit="return false;">
+<div class="space-y-md">
+<!-- Full Name -->
+<div class="group">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs ml-unit" for="name">Full Name</label>
+<input class="w-full px-lg py-md bg-surface-container-high border-none rounded-DEFAULT text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-primary-fixed-dim transition-all duration-300 ease-out-back outline-none" id="name" placeholder="Alex Rivers" type="text"/>
+</div>
+<!-- Email -->
+<div class="group">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs ml-unit" for="email">Email</label>
+<input class="w-full px-lg py-md bg-surface-container-high border-none rounded-DEFAULT text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-primary-fixed-dim transition-all duration-300 ease-out-back outline-none" id="email" placeholder="alex@example.com" type="email"/>
+</div>
+<!-- Password -->
+<div class="group">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs ml-unit" for="password">Password</label>
+<div class="relative">
+<input class="w-full px-lg py-md bg-surface-container-high border-none rounded-DEFAULT text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-primary-fixed-dim transition-all duration-300 ease-out-back outline-none" id="password" placeholder="••••••••" type="password"/>
+<button class="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Terms & Conditions -->
+<div class="flex items-start gap-md">
+<div class="mt-xs">
+<input class="w-5 h-5 rounded border-none bg-surface-container-highest text-primary focus:ring-primary-fixed-dim" id="terms" type="checkbox"/>
+</div>
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="terms">
+                            I agree to the <a class="text-primary hover:underline" href="#">Terms of Service</a> and <a class="text-primary hover:underline" href="#">Privacy Policy</a>. I'm ready for a more mindful experience.
+                        </label>
+</div>
+<!-- Primary Action Button -->
+<button class="w-full py-md bg-primary-container text-white font-headline-md rounded-full shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-out-back" type="submit">
+                        Begin Journey
+                    </button>
+</form>
+<!-- Footer Social/Login Link -->
+<footer class="space-y-xl">
+<div class="relative flex items-center py-md">
+<div class="flex-grow border-t border-surface-variant"></div>
+<span class="flex-shrink mx-md font-label-sm text-label-sm text-outline-variant">or continue with</span>
+<div class="flex-grow border-t border-surface-variant"></div>
+</div>
+<div class="flex gap-md justify-center">
+<button class="flex items-center justify-center gap-sm px-xl py-md bg-white border border-surface-variant rounded-full text-on-surface font-label-md hover:bg-surface-container-low transition-colors">
+<img alt="Google" class="w-5 h-5 grayscale opacity-70" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlFg7HRCzGv-treEP0qgGkU8tRrIBm8eKDixPsOcrQNQDpISIusNRsz8uSog5ldtCDT5Q4PXzC7BwYeKeZQRJxMkYJv9bSQFhk38qpk7-BIb5f073Hmag1tKNndcw3ZxlBSrbAQSrScXoazLPct6h4IVU8Qr4kztnAnVEl5jblMON_PPgInQKT16K6Eyb3rI4uOpmFQ5QWCS2BsiCW29LUg4QyZ9Lk--ONhPw2VDri87KpSdec44uboFPMGuHmvymgIVoQjIFEA6pD"/>
+                            Google
+                        </button>
+<button class="flex items-center justify-center gap-sm px-xl py-md bg-white border border-surface-variant rounded-full text-on-surface font-label-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="brand_awareness">brand_awareness</span>
+                            Apple
+                        </button>
+</div>
+<p class="text-center font-body-md text-body-md text-on-surface-variant">
+                        Already have an account? <a class="text-primary font-bold hover:underline" href="#">Sign In</a>
+</p>
+</footer>
+</div>
+<!-- Floating Decorative Glass Element -->
+<div class="hidden lg:block absolute bottom-xl right-xl">
+<div class="glass-panel px-lg py-md rounded-lg border border-white/40 shadow-xl shadow-primary/5 flex items-center gap-md">
+<div class="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
+<span class="font-label-sm text-label-sm text-primary">AI companion standing by</span>
+</div>
+</div>
+</section>
+</main>
+</body></html>

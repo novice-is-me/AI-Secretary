@@ -1,0 +1,556 @@
+{% extends 'base_auth.html' %}
+{% block title %}Huddle | Sanctuary{% endblock %}
+
+{% block extra_head %}
+<style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .glass-effect {
+        background: rgba(251,249,244,0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+    .chat-bubble-received { border-bottom-left-radius: 4px; }
+    .chat-bubble-sent { border-bottom-right-radius: 4px; }
+    body { overflow: hidden; height: 100vh; display: flex; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ── Desktop Sidebar ── -->
+<aside style="width:256px; border-right:1px solid #e8e4e0; background:#fdfcfb; display:none; flex-direction:column; justify-content:space-between; padding:32px 24px; height:100vh; flex-shrink:0;" class="sidebar-desk">
+    <div>
+        <!-- Logo -->
+        <div style="display:flex; align-items:center; gap:12px; padding:0 8px; margin-bottom:40px;">
+            <div style="width:40px; height:40px; border-radius:50%; background:#94a684; display:flex; align-items:center; justify-content:center;">
+                <span class="material-symbols-outlined" style="color:white; font-variation-settings:'FILL' 1;">spa</span>
+            </div>
+            <div>
+                <div style="font-size:22px; font-weight:600; color:#94A684; line-height:1.2;">Sanctuary</div>
+                <div style="font-size:10px; color:#75786f; letter-spacing:0.12em; text-transform:uppercase;">Calm Companion</div>
+            </div>
+        </div>
+        <!-- Nav -->
+        <nav style="display:flex; flex-direction:column; gap:4px;">
+            <a href="{% url 'huddle' %}" style="display:flex; align-items:center; gap:16px; padding:12px 16px; color:#94A684; font-weight:700; font-size:14px; border-right:4px solid #94A684; text-decoration:none; background:rgba(148,166,132,0.08); border-radius:8px 0 0 8px;">
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">chat_bubble</span> Huddle
+            </a>
+            <a href="{% url 'timeline' %}" style="display:flex; align-items:center; gap:16px; padding:12px 16px; border-radius:8px; color:#75786f; font-size:14px; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='#f2f0ed'" onmouseout="this.style.background='transparent'">
+                <span class="material-symbols-outlined">auto_stories</span>
+                <span>Timeline</span>
+            </a>
+        </nav>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px;">
+        <!-- Secretary Orb hint -->
+        <div style="padding:16px; border-radius:12px; background:#f5f3ee; border:1px solid rgba(197,200,189,0.3);">
+            <p style="font-size:12px; color:#536346; font-style:italic; margin:0 0 8px;">&ldquo;Breathe. You've got this.&rdquo;</p>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div style="width:8px; height:8px; background:#536346; border-radius:50%; animation:pulse 2s infinite;"></div>
+                <span style="font-size:10px; color:#75786f; letter-spacing:0.1em; font-weight:500;">SEC-READY</span>
+            </div>
+        </div>
+        <!-- User card -->
+        <a href="{% url 'profile' %}" style="display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px; background:#f0eee9; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='#e4e2dd'" onmouseout="this.style.background='#f0eee9'">
+            <img id="huddleSidebarProfileImg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtU65XRpdKQg_XJVvRjopMcSs9dgj_-xwI5aHUBWXF1XR8qhD3_DHBttscPhNh-cD2aICNWbG6dhMpNyDsmBX8rpk1II2D9dRag00c3OX-vQdlOk-77QzSNUiniJ8L0QL8dhZ-9WcFR8_1vu7nSP5EKZuUZlbzHg1FzhQ3DhRX9X5u3FJ-VxgInZs2_c7fUG1Ljt_oYmZePWG4Vmuv_ixb-rzgBINgX1_XrX_Nytepv6Ce2DYB1Q3lUB1_edkrCIm6wfsq7g2h-3h4" alt="User" style="width:32px; height:32px; border-radius:50%; object-fit:cover;"/>
+            <div>
+                <div style="font-size:14px; font-weight:600; color:#1b1c19;">Alex Rivera</div>
+                <div style="font-size:10px; color:#75786f;">Pro Member</div>
+            </div>
+        </a>
+    </div>
+</aside>
+
+<!-- ── Mobile Top Nav ── -->
+<header class="mobile-topnav" style="display:none; position:fixed; top:0; left:0; right:0; z-index:50; justify-content:space-between; align-items:center; padding:16px 24px; background:rgba(253,252,251,0.85); backdrop-filter:blur(12px);">
+  <div style="display:flex; align-items:center; gap:8px;">
+    <span class="material-symbols-outlined" style="color:#94A684; font-variation-settings:'FILL' 1;">spa</span>
+    <h1 style="font-size:20px; font-weight:700; color:#94A684; margin:0;">Sanctuary</h1>
+  </div>
+  <span class="material-symbols-outlined" style="color:#75786f;">account_circle</span>
+</header>
+
+<!-- ── Main Content ── -->
+<main style="flex:1; display:flex; flex-direction:column; height:100vh; overflow:hidden; background:#fbf9f4; position:relative;">
+
+    <!-- Scrollable area -->
+    <div class="no-scrollbar" id="scroll-area" style="flex:1; overflow-y:auto; padding:24px 64px 24px 64px;">
+        <div style="max-width:768px; margin:0 auto;">
+
+            <!-- ── DESKTOP VIEW: Anchor Cards ── -->
+            <div class="desktop-content">
+                <header style="margin-bottom:40px; padding-top:16px;">
+                    <h2 style="font-size:32px; font-weight:400; color:#1b1c19; margin:0 0 8px; line-height:1.2;">Good morning, Alex</h2>
+                    <p style="font-size:18px; color:#75786f; margin:0;">Today feels like a gentle climb. Here are your anchors for a steady start.</p>
+                </header>
+
+                <!-- Anchor Grid -->
+                <div style="display:grid; grid-template-columns:1fr; gap:16px;">
+                    <!-- Row 1: 2 cards -->
+                    <div style="display:grid; grid-template-columns:2fr 1fr; gap:16px;">
+                        <!-- Anchor 01 – Main -->
+                        <div style="background:#f5f3ee; padding:24px; border-radius:16px; position:relative; overflow:hidden; transition:all 0.3s;" onmouseover="this.style.background='#fff'; this.style.boxShadow='0 12px 40px rgba(83,99,70,0.08)'" onmouseout="this.style.background='#f5f3ee'; this.style.boxShadow='none'">
+                            <div style="position:absolute; top:-32px; right:-32px; width:96px; height:96px; background:rgba(83,99,70,0.05); border-radius:50%;"></div>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; position:relative;">
+                                <div>
+                                    <span style="font-size:10px; font-weight:700; letter-spacing:0.18em; color:#536346; text-transform:uppercase; display:block; margin-bottom:8px;">Anchor 01</span>
+                                    <h3 style="font-size:22px; font-weight:400; color:#1b1c19; margin:0 0 8px;">Deep Work Session</h3>
+                                    <p style="font-size:16px; color:#75786f; margin:0 0 12px;">Complete the presentation deck for the Sustainability Summit.</p>
+                                    <div style="display:flex; gap:8px;">
+                                        <span style="background:rgba(83,99,70,0.1); color:#536346; font-size:10px; font-weight:700; padding:4px 12px; border-radius:9999px;">9:00 AM</span>
+                                        <span style="background:rgba(77,97,113,0.1); color:#4d6171; font-size:10px; font-weight:700; padding:4px 12px; border-radius:9999px;">90 MINS</span>
+                                    </div>
+                                </div>
+                                <button style="width:40px; height:40px; border-radius:50%; border:1px solid rgba(83,99,70,0.2); background:none; display:flex; align-items:center; justify-content:center; color:#536346; cursor:pointer; flex-shrink:0; transition:all 0.2s;" onmouseover="this.style.background='#536346'; this.style.color='white'" onmouseout="this.style.background='none'; this.style.color='#536346'">
+                                    <span class="material-symbols-outlined">play_arrow</span>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Anchor 02 – Secondary -->
+                        <div style="background:#94a684; padding:24px; border-radius:16px; color:white; transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                            <span style="font-size:10px; font-weight:700; letter-spacing:0.18em; opacity:0.8; text-transform:uppercase; display:block; margin-bottom:8px;">Anchor 02</span>
+                            <h3 style="font-size:22px; font-weight:400; margin:0 0 4px;">Morning Walk</h3>
+                            <p style="font-size:14px; opacity:0.9; margin:0;">Clear the mental fog.</p>
+                            <div style="margin-top:24px; display:flex; justify-content:flex-end;">
+                                <span class="material-symbols-outlined" style="font-size:36px; opacity:0.4;">nature_people</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Anchor 03 – Full width -->
+                    <div style="background:#f0eee9; padding:24px; border-radius:16px; display:flex; align-items:center; gap:24px; border-left:4px solid rgba(83,99,70,0.4); transition:background 0.2s;" onmouseover="this.style.background='#eae8e3'" onmouseout="this.style.background='#f0eee9'">
+                        <div style="width:48px; height:48px; border-radius:50%; background:white; display:flex; align-items:center; justify-content:center; color:#536346; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                            <span class="material-symbols-outlined">call</span>
+                        </div>
+                        <div style="flex:1;">
+                            <span style="font-size:10px; font-weight:700; letter-spacing:0.18em; color:#536346; text-transform:uppercase; display:block; margin-bottom:4px;">Anchor 03</span>
+                            <h3 style="font-size:22px; font-weight:400; color:#1b1c19; margin:0 0 4px;">Sync with Design Team</h3>
+                            <p style="font-size:16px; color:#75786f; margin:0;">Final review of the glassmorphism icons.</p>
+                        </div>
+                        <span style="font-size:14px; font-weight:500; color:#75786f; flex-shrink:0;">2:00 PM</span>
+                    </div>
+                </div>
+
+                <!-- Secretary Waiting + Desktop Chat Feed -->
+                <div id="desktop-chat-feed" style="display:flex; flex-direction:column; gap:16px; padding:24px 0;">
+                    <!-- Waiting hint (hidden once user sends messages) -->
+                    <div id="desktop-waiting-hint" style="display:flex; justify-content:center; padding:16px 0;">
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:12px; opacity:0.55;">
+                            <div style="width:16px; height:16px; border-radius:50%; background:linear-gradient(135deg,#536346,#d6e9c3); filter:blur(2px); animation:pulse 2s infinite;"></div>
+                            <p style="font-size:12px; font-style:italic; color:#75786f; margin:0;">Waiting for your lead...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── MOBILE VIEW: Chat ── -->
+            <div class="mobile-content" style="display:none; padding-top:72px; padding-bottom:160px;">
+                <!-- Orb Header -->
+                <div style="display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; padding:24px 0 32px;">
+                    <div style="width:64px; height:64px; border-radius:50%; background:rgba(148,166,132,0.15); display:flex; align-items:center; justify-content:center;">
+                        <div style="width:44px; height:44px; background:#94a684; border-radius:50%; display:flex; align-items:center; justify-content:center; animation:pulse 2s infinite;">
+                            <span class="material-symbols-outlined" style="color:white; font-variation-settings:'FILL' 1;">spa</span>
+                        </div>
+                    </div>
+                    <h2 style="font-size:22px; font-weight:400; color:#1b1c19; margin:0;">Good Morning, Alex</h2>
+                    <p style="font-size:16px; color:#75786f; margin:0; max-width:260px;">I've organized your day to focus on creative flow. Ready to begin?</p>
+                </div>
+
+                <!-- Chat messages -->
+                <div id="mobile-chat-feed" style="display:flex; flex-direction:column; gap:20px;">
+                    <!-- AI msg 1 -->
+                    <div style="display:flex; gap:12px; max-width:85%;">
+                        <div style="width:32px; height:32px; border-radius:50%; background:#94a684; flex-shrink:0; display:flex; align-items:center; justify-content:center; margin-top:4px;">
+                            <span class="material-symbols-outlined" style="font-size:16px; color:white; font-variation-settings:'FILL' 1;">spa</span>
+                        </div>
+                        <div style="background:#eae8e3; padding:16px; border-radius:16px; border-bottom-left-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+                            <p style="font-size:16px; color:#444840; margin:0 0 6px; line-height:1.6;">Your meditation session is scheduled for 10:00 AM. I noticed you've been working intensely—would you like to push it up to now for a quick reset?</p>
+                            <span style="font-size:10px; color:#75786f;">9:41 AM</span>
+                        </div>
+                    </div>
+
+                    <!-- User msg -->
+                    <div style="display:flex; flex-direction:row-reverse; gap:12px; max-width:85%; margin-left:auto;">
+                        <div style="width:32px; height:32px; border-radius:50%; overflow:hidden; flex-shrink:0; margin-top:4px;">
+                            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtMt8IGz83G5rA4SrWYm_9OPmCWgLVdb59wXLJQOvNBl1-i-HcVhJL3Res57_7lOXAlIpxjpYpXtbTaaYl0xkaNRZVKXjREIc_AmVUdehNEfTHj7iOIAlMPOMDC6lg7ExcRRc5z67WASvsFycVlGU1ebyvZshBvE8sIm4ywSrzRvlZLdGnZi6oJxj7i5Wjk3DJJitzILGVNd2SfT8KJluGkshEE3ELjEGuNV7tX3jlUMu3EEpkixhm4zDJh35keaij2u5b0QtPJ60a" alt="Me" style="width:100%; height:100%; object-fit:cover;"/>
+                        </div>
+                        <div style="background:#536346; color:white; padding:16px; border-radius:16px; border-bottom-right-radius:4px; box-shadow:0 2px 8px rgba(83,99,70,0.2);">
+                            <p style="font-size:16px; margin:0 0 6px; line-height:1.6;">Actually, yes. That sounds perfect. Can you also block out my calendar for the next 30 minutes so I'm not interrupted?</p>
+                            <span style="font-size:10px; opacity:0.7; display:block; text-align:right;">9:42 AM</span>
+                        </div>
+                    </div>
+
+                    <!-- Suggestion chips -->
+                    <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; padding:4px 0;">
+                        <button style="background:#cde2f5; color:#4d6171; padding:8px 20px; border-radius:9999px; border:none; font-size:14px; font-weight:500; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#b4c9db'" onmouseout="this.style.background='#cde2f5'">Yes, block it</button>
+                        <button style="background:#eae8e3; color:#444840; padding:8px 20px; border-radius:9999px; border:none; font-size:14px; font-weight:500; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#e4e2dd'" onmouseout="this.style.background='#eae8e3'">Remind me later</button>
+                    </div>
+
+                    <!-- AI action response -->
+                    <div style="display:flex; gap:12px; max-width:85%;">
+                        <div style="width:32px; height:32px; border-radius:50%; background:#94a684; flex-shrink:0; display:flex; align-items:center; justify-content:center; margin-top:4px;">
+                            <span class="material-symbols-outlined" style="font-size:16px; color:white; font-variation-settings:'FILL' 1;">spa</span>
+                        </div>
+                        <div style="background:#eae8e3; padding:16px; border-radius:16px; border-bottom-left-radius:4px; border-left:4px solid #94a684; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+                            <div style="display:flex; align-items:center; gap:4px; margin-bottom:8px;">
+                                <span class="material-symbols-outlined" style="font-size:16px; color:#94a684;">event_available</span>
+                                <span style="font-size:12px; color:#94a684; font-weight:500;">Calendar Updated</span>
+                            </div>
+                            <p style="font-size:16px; color:#444840; margin:0 0 6px; line-height:1.6;">Done. Your calendar is now marked as "Focused Time" until 10:15 AM. Enjoy your reset, Alex.</p>
+                            <span style="font-size:10px; color:#75786f;">9:43 AM</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Desktop Input Bar ── -->
+    <div class="desktop-input" style="padding:16px 64px 24px; background:rgba(251,249,244,0.95); backdrop-filter:blur(8px); border-top:1px solid rgba(197,200,189,0.15); flex-shrink:0;">
+        <div style="max-width:768px; margin:0 auto;">
+            <div class="glass-effect" style="border-radius:9999px; border:1px solid white; padding:8px; display:flex; align-items:center; gap:8px; box-shadow:0 8px 32px rgba(83,99,70,0.08);">
+                <!-- + button with popup -->
+                <div style="position:relative; flex-shrink:0;">
+                    <button id="desktop-add-btn" title="Attach" style="width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:none; border:none; color:#75786f; cursor:pointer; transition:all 0.2s;">
+                        <span class="material-symbols-outlined">add</span>
+                    </button>
+                    <!-- Attach popup -->
+                    <div id="desktop-attach-popup" style="display:none; position:absolute; bottom:52px; left:0; background:rgba(251,249,244,0.96); backdrop-filter:blur(16px); border:1px solid rgba(197,200,189,0.5); border-radius:16px; padding:8px; box-shadow:0 8px 32px rgba(83,99,70,0.14); min-width:180px; z-index:100; animation:popIn 0.15s ease;">
+                        <button class="attach-option" id="desktop-upload-btn" style="display:flex; align-items:center; gap:12px; width:100%; padding:10px 14px; background:none; border:none; border-radius:10px; cursor:pointer; font-size:14px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; transition:background 0.15s;" onmouseover="this.style.background='#f0eee9'" onmouseout="this.style.background='none'">
+                            <span class="material-symbols-outlined" style="font-size:20px; color:#536346;">image</span>
+                            Upload Image
+                        </button>
+                        <button class="attach-option camera-btn-desktop" id="desktop-camera-btn" style="display:flex; align-items:center; gap:12px; width:100%; padding:10px 14px; background:none; border:none; border-radius:10px; cursor:pointer; font-size:14px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; transition:background 0.15s;" onmouseover="this.style.background='#f0eee9'" onmouseout="this.style.background='none'">
+                            <span class="material-symbols-outlined" style="font-size:20px; color:#536346;">photo_camera</span>
+                            Take Photo
+                        </button>
+                    </div>
+                </div>
+                <input id="desktop-input" class="huddle-input" type="text" placeholder="What's on your mind?" style="flex:1; background:transparent; border:none; outline:none; font-size:16px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; padding:4px 8px;" />
+                <div style="padding-right:8px;">
+                    <button class="huddle-send-btn" style="width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#536346; border:none; color:white; cursor:pointer; box-shadow:0 4px 12px rgba(83,99,70,0.3); transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Mobile Input + Bottom Nav ── -->
+    <div class="mobile-bottom" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:50; flex-direction:column; align-items:center; gap:0;">
+        <!-- Chat input row -->
+        <div style="width:calc(100% - 48px); margin-bottom:12px; background:rgba(251,249,244,0.82); backdrop-filter:blur(20px); border-radius:9999px; padding:4px 8px 4px 8px; display:flex; align-items:center; gap:6px; box-shadow:0 4px 24px rgba(148,166,132,0.15); border:1px solid rgba(255,255,255,0.5);">
+            <!-- + button with popup (mobile) -->
+            <div style="position:relative; flex-shrink:0;">
+                <button id="mobile-add-btn" style="width:40px; height:40px; border-radius:50%; background:none; border:none; color:#75786f; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                    <span class="material-symbols-outlined" style="font-size:22px;">add</span>
+                </button>
+                <!-- Attach popup (mobile) -->
+                <div id="mobile-attach-popup" style="display:none; position:absolute; bottom:52px; left:0; background:rgba(251,249,244,0.96); backdrop-filter:blur(16px); border:1px solid rgba(197,200,189,0.5); border-radius:16px; padding:8px; box-shadow:0 8px 32px rgba(83,99,70,0.14); min-width:170px; z-index:100; animation:popIn 0.15s ease;">
+                    <button class="attach-option" id="mobile-upload-btn" style="display:flex; align-items:center; gap:12px; width:100%; padding:10px 14px; background:none; border:none; border-radius:10px; cursor:pointer; font-size:14px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; transition:background 0.15s;" onmouseover="this.style.background='#f0eee9'" onmouseout="this.style.background='none'">
+                        <span class="material-symbols-outlined" style="font-size:20px; color:#536346;">image</span>
+                        Upload Image
+                    </button>
+                    <button class="attach-option" id="mobile-camera-btn" style="display:flex; align-items:center; gap:12px; width:100%; padding:10px 14px; background:none; border:none; border-radius:10px; cursor:pointer; font-size:14px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; transition:background 0.15s;" onmouseover="this.style.background='#f0eee9'" onmouseout="this.style.background='none'">
+                        <span class="material-symbols-outlined" style="font-size:20px; color:#536346;">photo_camera</span>
+                        Take Photo
+                    </button>
+                </div>
+            </div>
+            <input id="mobile-input" class="huddle-input" type="text" placeholder="Tell me what's on your mind..." style="flex:1; background:transparent; border:none; outline:none; font-size:15px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; padding:10px 0;" />
+            <button class="huddle-send-btn" style="width:44px; height:44px; border-radius:50%; background:#536346; border:none; color:white; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 4px 12px rgba(83,99,70,0.3); flex-shrink:0;">
+                <span class="material-symbols-outlined">arrow_upward</span>
+            </button>
+        </div>
+        <!-- Bottom Nav -->
+        <nav id="mobile-bottom-nav" style="width:calc(100% - 32px); margin-bottom:24px; background:rgba(255,255,255,0.75); backdrop-filter:blur(20px); border-radius:9999px; display:flex; justify-content:space-around; align-items:center; padding:8px 16px; box-shadow:0 8px 32px rgba(148,166,132,0.12); border:1px solid rgba(255,255,255,0.25); transition:opacity 0.2s, max-height 0.2s, margin 0.2s, padding 0.2s; overflow:hidden; max-height:80px;">
+            <a href="{% url 'huddle' %}" style="display:flex; flex-direction:column; align-items:center; background:#94a684; color:white; border-radius:9999px; padding:10px 20px; text-decoration:none; gap:2px;">
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1; font-size:22px;">chat_bubble</span>
+                <span style="font-size:10px; font-weight:500;">Huddle</span>
+            </a>
+            <a href="{% url 'timeline' %}" style="display:flex; flex-direction:column; align-items:center; color:#75786f; padding:10px 20px; text-decoration:none; gap:2px;">
+                <span class="material-symbols-outlined" style="font-size:22px;">auto_stories</span>
+                <span style="font-size:10px; font-weight:500;">Timeline</span>
+            </a>
+            <a href="{% url 'profile' %}" style="display:flex; flex-direction:column; align-items:center; color:#75786f; padding:10px 20px; text-decoration:none; gap:2px;">
+                <span class="material-symbols-outlined" style="font-size:22px;">person</span>
+                <span style="font-size:10px; font-weight:500;">Profile</span>
+            </a>
+        </nav>
+    </div>
+</main>
+
+<!-- Hidden file inputs -->
+<input type="file" id="upload-input" accept="image/*" style="display:none;" />
+<input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none;" />
+
+<!-- Decorative blobs -->
+<div style="position:fixed; top:10%; right:-5%; width:35vw; height:35vw; background:rgba(83,99,70,0.04); border-radius:50%; filter:blur(80px); pointer-events:none; z-index:0;"></div>
+<div style="position:fixed; bottom:15%; left:-5%; width:25vw; height:25vw; background:rgba(77,97,113,0.04); border-radius:50%; filter:blur(60px); pointer-events:none; z-index:0;"></div>
+
+<style>
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.92)} }
+@keyframes popIn { from{opacity:0;transform:translateY(6px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+/* Desktop layout */
+@media (min-width: 1024px) {
+    body { flex-direction: row !important; }
+    .sidebar-desk { display: flex !important; }
+    .mobile-topnav { display: none !important; }
+    .desktop-content { display: block !important; }
+    .mobile-content { display: none !important; }
+    .desktop-input { display: block !important; }
+    .mobile-bottom { display: none !important; }
+    #scroll-area { padding: 24px 64px; }
+    /* Hide camera button on desktop — camera capture not accessible on desktop */
+    .camera-btn-desktop { display: none !important; }
+}
+
+/* Mobile layout */
+@media (max-width: 1023px) {
+    body { flex-direction: column !important; overflow: hidden !important; }
+    .sidebar-desk { display: none !important; }
+    .mobile-topnav { display: flex !important; }
+    .desktop-content { display: none !important; }
+    .mobile-content { display: block !important; }
+    .desktop-input { display: none !important; }
+    .mobile-bottom { display: flex !important; }
+    #scroll-area { padding: 0 20px; }
+}
+</style>
+
+<script>
+const STORAGE_KEY = 'sanctuary_huddle_messages';
+
+// ── Helpers ──────────────────────────────────────────
+function getMessages() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+}
+function saveMessages(msgs) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
+}
+function timeLabel() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function scrollToBottom() {
+    document.querySelectorAll('.no-scrollbar').forEach(el => { el.scrollTop = el.scrollHeight; });
+}
+
+// ── Bubble builders ───────────────────────────────────
+function createTextBubble(text, time) {
+    const w = document.createElement('div');
+    w.className = 'user-msg-bubble';
+    w.style.cssText = 'display:flex;flex-direction:row-reverse;gap:12px;max-width:85%;margin-left:auto;margin-top:12px;';
+    w.innerHTML = `
+        <div style="width:32px;height:32px;border-radius:50%;background:#94a684;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:4px;">
+            <span class="material-symbols-outlined" style="font-size:16px;color:white;">person</span>
+        </div>
+        <div style="background:#536346;color:white;padding:14px 16px;border-radius:16px;border-bottom-right-radius:4px;box-shadow:0 2px 8px rgba(83,99,70,0.2);">
+            <p style="font-size:15px;margin:0 0 4px;line-height:1.55;">${escapeHtml(text)}</p>
+            <span style="font-size:10px;opacity:0.65;display:block;text-align:right;">${time}</span>
+        </div>`;
+    return w;
+}
+
+function createImageBubble(dataUrl, time) {
+    const w = document.createElement('div');
+    w.className = 'user-msg-bubble';
+    w.style.cssText = 'display:flex;flex-direction:row-reverse;gap:12px;max-width:85%;margin-left:auto;margin-top:12px;';
+    w.innerHTML = `
+        <div style="width:32px;height:32px;border-radius:50%;background:#94a684;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:4px;">
+            <span class="material-symbols-outlined" style="font-size:16px;color:white;">person</span>
+        </div>
+        <div style="background:#536346;padding:8px;border-radius:16px;border-bottom-right-radius:4px;box-shadow:0 2px 8px rgba(83,99,70,0.2);">
+            <img src="${dataUrl}" alt="Sent image" style="max-width:220px;max-height:200px;width:100%;border-radius:10px;display:block;object-fit:cover;" />
+            <span style="font-size:10px;color:rgba(255,255,255,0.65);display:block;text-align:right;margin-top:4px;">${time}</span>
+        </div>`;
+    return w;
+}
+
+// ── Render all messages ───────────────────────────────
+function renderMessages() {
+    const msgs = getMessages();
+    const feeds = [
+        document.getElementById('mobile-chat-feed'),
+        document.getElementById('desktop-chat-feed')
+    ];
+    feeds.forEach(container => {
+        if (!container) return;
+        container.querySelectorAll('.user-msg-bubble').forEach(el => el.remove());
+        msgs.forEach(msg => {
+            const el = msg.type === 'image'
+                ? createImageBubble(msg.dataUrl, msg.time)
+                : createTextBubble(msg.text, msg.time);
+            container.appendChild(el);
+        });
+        const area = container.closest('.no-scrollbar') || container.parentElement;
+        if (area) area.scrollTop = area.scrollHeight;
+    });
+
+    // Hide/show "Waiting for your lead..." hint on desktop
+    const hint = document.getElementById('desktop-waiting-hint');
+    if (hint) hint.style.display = msgs.length > 0 ? 'none' : 'flex';
+}
+
+// ── Send text ─────────────────────────────────────────
+function sendMessage(inputEl) {
+    const text = inputEl.value.trim();
+    if (!text) return;
+    const msgs = getMessages();
+    msgs.push({ type: 'text', text, time: timeLabel() });
+    saveMessages(msgs);
+    inputEl.value = '';
+    renderMessages();
+    scrollToBottom();
+}
+
+// ── Send image ────────────────────────────────────────
+function sendImage(dataUrl) {
+    const msgs = getMessages();
+    msgs.push({ type: 'image', dataUrl, time: timeLabel() });
+    saveMessages(msgs);
+    renderMessages();
+    scrollToBottom();
+}
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        if (!file) return reject();
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// ── Wire up text inputs & send buttons ───────────────
+function initInputs() {
+    document.querySelectorAll('.huddle-input').forEach(input => {
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
+        });
+    });
+    const desktopBtn = document.querySelector('.desktop-input .huddle-send-btn');
+    const mobileBtn  = document.querySelector('.mobile-bottom .huddle-send-btn');
+    if (desktopBtn) desktopBtn.addEventListener('click', () => sendMessage(document.getElementById('desktop-input')));
+    if (mobileBtn)  mobileBtn.addEventListener('click',  () => sendMessage(document.getElementById('mobile-input')));
+}
+
+// ── Wire up image / camera buttons (popup) ────────────
+function initMediaButtons() {
+    const uploadInput = document.getElementById('upload-input');
+    const cameraInput = document.getElementById('camera-input');
+
+    function closeAllPopups() {
+        ['desktop-attach-popup','mobile-attach-popup'].forEach(id => {
+            const p = document.getElementById(id);
+            if (p) p.style.display = 'none';
+        });
+        ['desktop-add-btn','mobile-add-btn'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            const icon = btn.querySelector('.material-symbols-outlined');
+            if (icon) icon.textContent = 'add';
+            btn.style.background = '';
+            btn.style.color = '#75786f';
+        });
+    }
+
+    function togglePopup(popupId, addBtnId) {
+        const popup  = document.getElementById(popupId);
+        const addBtn = document.getElementById(addBtnId);
+        if (!popup || !addBtn) return;
+        addBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            const isOpen = popup.style.display !== 'none';
+            closeAllPopups();
+            if (!isOpen) {
+                popup.style.display = 'block';
+                const icon = addBtn.querySelector('.material-symbols-outlined');
+                if (icon) icon.textContent = 'close';
+                addBtn.style.background = '#f0eee9';
+                addBtn.style.color = '#536346';
+            }
+        });
+    }
+
+    togglePopup('desktop-attach-popup', 'desktop-add-btn');
+    togglePopup('mobile-attach-popup',  'mobile-add-btn');
+
+    // Close on outside click
+    document.addEventListener('click', e => {
+        const inside = e.target.closest('#desktop-attach-popup,#desktop-add-btn,#mobile-attach-popup,#mobile-add-btn');
+        if (!inside) closeAllPopups();
+    });
+
+    // Wire option buttons → file inputs
+    document.getElementById('desktop-upload-btn')?.addEventListener('click', () => { closeAllPopups(); uploadInput.click(); });
+    document.getElementById('mobile-upload-btn')?.addEventListener('click',  () => { closeAllPopups(); uploadInput.click(); });
+    document.getElementById('desktop-camera-btn')?.addEventListener('click', () => { closeAllPopups(); cameraInput.click(); });
+    document.getElementById('mobile-camera-btn')?.addEventListener('click',  () => { closeAllPopups(); cameraInput.click(); });
+
+    [uploadInput, cameraInput].forEach(inp => {
+        if (!inp) return;
+        inp.addEventListener('change', async () => {
+            const file = inp.files && inp.files[0];
+            if (!file) return;
+            try {
+                const dataUrl = await readFileAsDataUrl(file);
+                sendImage(dataUrl);
+            } catch(e) { console.error('Failed to read image', e); }
+            inp.value = '';
+        });
+    });
+}
+
+
+// ── Mobile: collapse nav when input is focused ───────
+function initMobileFocusBehavior() {
+    const mobileInput = document.getElementById('mobile-input');
+    const bottomNav   = document.getElementById('mobile-bottom-nav');
+    if (!mobileInput || !bottomNav) return;
+
+    mobileInput.addEventListener('focus', () => {
+        // Collapse the nav completely so it takes up zero space
+        bottomNav.style.maxHeight  = '0';
+        bottomNav.style.opacity    = '0';
+        bottomNav.style.padding    = '0 16px';
+        bottomNav.style.marginBottom = '0';
+        bottomNav.style.pointerEvents = 'none';
+    });
+
+    mobileInput.addEventListener('blur', () => {
+        // Small delay so tap on nav item registers first
+        setTimeout(() => {
+            bottomNav.style.maxHeight  = '80px';
+            bottomNav.style.opacity    = '1';
+            bottomNav.style.padding    = '8px 16px';
+            bottomNav.style.marginBottom = '24px';
+            bottomNav.style.pointerEvents = '';
+        }, 150);
+    });
+}
+
+// ── Boot ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    initInputs();
+    initMediaButtons();
+    initMobileFocusBehavior();
+    renderMessages();
+    
+    // Load profile picture from localStorage
+    const savedImage = localStorage.getItem('sanctuary_profile_pic');
+    if (savedImage) {
+        const huddleSidebarProfileImg = document.getElementById('huddleSidebarProfileImg');
+        if (huddleSidebarProfileImg) {
+            huddleSidebarProfileImg.src = savedImage;
+        }
+    }
+});
+</script>
+{% endblock %}
+

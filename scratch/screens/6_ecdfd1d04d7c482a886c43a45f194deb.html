@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sanctuary - Welcome Back</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary": "#536346",
+                      "on-tertiary": "#ffffff",
+                      "on-error": "#ffffff",
+                      "error": "#ba1a1a",
+                      "background": "#fbf9f4",
+                      "primary-fixed-dim": "#bacca8",
+                      "surface-variant": "#e4e2dd",
+                      "secondary-fixed-dim": "#b4c9db",
+                      "primary-fixed": "#d6e9c3",
+                      "outline": "#75786f",
+                      "surface-dim": "#dbdad5",
+                      "inverse-surface": "#30312e",
+                      "error-container": "#ffdad6",
+                      "primary-container": "#94a684",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-bright": "#fbf9f4",
+                      "surface-container-highest": "#e4e2dd",
+                      "secondary-container": "#cde2f5",
+                      "on-surface-variant": "#444840",
+                      "outline-variant": "#c5c8bd",
+                      "inverse-primary": "#bacca8",
+                      "secondary": "#4d6171",
+                      "on-secondary-container": "#516575",
+                      "on-tertiary-fixed-variant": "#4c463e",
+                      "on-secondary-fixed": "#071e2b",
+                      "tertiary": "#645d55",
+                      "surface-container-low": "#f5f3ee",
+                      "on-tertiary-container": "#3c362f",
+                      "secondary-fixed": "#d0e5f8",
+                      "tertiary-container": "#a79f95",
+                      "surface-tint": "#536346",
+                      "on-primary-container": "#2c3b21",
+                      "on-background": "#1b1c19",
+                      "on-secondary-fixed-variant": "#354958",
+                      "on-tertiary-fixed": "#1f1b14",
+                      "on-secondary": "#ffffff",
+                      "inverse-on-surface": "#f2f1ec",
+                      "on-primary-fixed": "#111f08",
+                      "on-primary": "#ffffff",
+                      "tertiary-fixed": "#ebe1d6",
+                      "surface-container": "#f0eee9",
+                      "surface-container-high": "#eae8e3",
+                      "surface": "#fbf9f4",
+                      "tertiary-fixed-dim": "#cec5ba",
+                      "on-surface": "#1b1c19",
+                      "on-primary-fixed-variant": "#3c4b30",
+                      "on-error-container": "#93000a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xxl": "64px",
+                      "xl": "40px",
+                      "md": "16px",
+                      "unit": "4px",
+                      "sm": "8px",
+                      "timeline-gap": "32px",
+                      "xs": "4px",
+                      "lg": "24px"
+              },
+              "fontFamily": {
+                      "label-sm": ["Plus Jakarta Sans"],
+                      "body-lg": ["Plus Jakarta Sans"],
+                      "label-md": ["Plus Jakarta Sans"],
+                      "headline-lg": ["Plus Jakarta Sans"],
+                      "display-lg": ["Plus Jakarta Sans"],
+                      "headline-md": ["Plus Jakarta Sans"],
+                      "body-md": ["Plus Jakarta Sans"]
+              },
+              "fontSize": {
+                      "label-sm": ["12px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "400"}],
+                      "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "400"}],
+                      "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .organic-glow {
+            background: radial-gradient(circle at center, #d6e9c3 0%, rgba(251, 249, 244, 0) 70%);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col overflow-x-hidden">
+<!-- Presence Element (The Secretary Orb) -->
+<div class="fixed -top-24 -right-24 w-96 h-96 organic-glow opacity-50 z-0 pointer-events-none"></div>
+<div class="fixed -bottom-48 -left-24 w-[500px] h-[500px] organic-glow opacity-30 z-0 pointer-events-none"></div>
+<main class="flex-1 flex flex-col items-center justify-center px-lg py-xxl relative z-10 w-full max-w-md mx-auto">
+<!-- Brand Header -->
+<header class="text-center mb-xl">
+<div class="flex justify-center mb-md">
+<div class="w-16 h-16 rounded-xl bg-primary-container flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-white text-[32px]" data-icon="spa" style="font-variation-settings: 'FILL' 1;">spa</span>
+</div>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-background mb-sm tracking-tight">Sanctuary</h1>
+<p class="font-body-md text-on-surface-variant max-w-[280px] mx-auto leading-relaxed">
+                Welcome back to your calm, organized space.
+            </p>
+</header>
+<!-- Social Sign-in -->
+<section class="w-full flex flex-col gap-md mb-xl">
+<button class="w-full flex items-center justify-center gap-md py-md px-lg bg-surface-container rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-all active:scale-[0.98]">
+<img alt="Google" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZPD-PBDuCojx9kUzIM_TKTaOkq64MqqHkT3r82llOovGhUblHw5MKqdgyILiRtJpsC1tq6ZJwPHn5oErqdGNmsoTZJsxz0sgv1M3zmD1lHqfasriZri7O0R8DnZKUPPbMN6YnarhnhzX-nteHFNmED11DHfFDGpUid6lVYgLUpTl2aVvRpnB-Qk_4ahrASNV2Pdm8wc4iLEy_-TL4iyMr01VEZ-Pzw7xUtfxBNoUzEwn_lMwo5fV6WNOvpeg70_sN2lSelCuXt9AL"/>
+                Continue with Google
+            </button>
+<button class="w-full flex items-center justify-center gap-md py-md px-lg bg-on-background text-background rounded-lg font-label-md text-label-md hover:opacity-90 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-xl" data-icon="apple" style="font-variation-settings: 'FILL' 1;">ios</span>
+                Continue with Apple
+            </button>
+</section>
+<!-- Divider -->
+<div class="w-full flex items-center gap-md mb-xl">
+<div class="h-[1px] flex-1 bg-outline-variant"></div>
+<span class="font-label-sm text-label-sm text-outline">or email</span>
+<div class="h-[1px] flex-1 bg-outline-variant"></div>
+</div>
+<!-- Login Form -->
+<form class="w-full flex flex-col gap-lg">
+<div class="flex flex-col gap-sm">
+<div class="relative group">
+<input class="w-full bg-surface-container-low border-none rounded-lg px-lg py-md font-body-md text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary-container focus:bg-white transition-all outline-none" placeholder="Email address" type="email"/>
+</div>
+<div class="relative group">
+<input class="w-full bg-surface-container-low border-none rounded-lg px-lg py-md font-body-md text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary-container focus:bg-white transition-all outline-none" placeholder="Password" type="password"/>
+</div>
+</div>
+<button class="w-full py-lg px-lg bg-primary text-white rounded-full font-label-md text-label-md shadow-lg shadow-primary/10 hover:bg-primary-container transition-all ease-out-back active:scale-95" type="submit">
+                Sign In
+            </button>
+</form>
+<!-- Footer Links -->
+<footer class="mt-xxl text-center">
+<p class="font-label-md text-label-md text-on-surface-variant mb-md">
+                Don't have an account yet?
+            </p>
+<a class="inline-block font-label-md text-label-md text-primary font-bold hover:underline" href="#">
+                Create account
+            </a>
+<div class="mt-xl">
+<a class="font-label-sm text-label-sm text-outline hover:text-on-surface-variant transition-colors" href="#">
+                    Forgot password?
+                </a>
+</div>
+</footer>
+<!-- Hero Decorative Image (Minimalist) -->
+<div class="mt-xxl w-full overflow-hidden rounded-lg shadow-sm">
+<img class="w-full h-48 object-cover grayscale opacity-60 mix-blend-multiply" data-alt="A peaceful and minimalist interior scene showcasing a single ceramic vase with a dried botanical branch on an oatmeal-colored wooden table. The lighting is soft and ethereal, pouring in from a nearby window, creating gentle shadows. The color palette is dominated by soft sage greens, warm creams, and neutral earth tones, evoking a sense of calm and mental clarity as defined by the Digital Sanctuary brand aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqCvRx2L44JX_isysKOzTqmi8MtEmaoigyjg3c_gVrFu6E3raQZSl2VuSKHihsTo3oc5V9lVIuza6Gvqond73J7rKi2L1KZZ4fJpBzrKhNcOnTmYMaAfslMqYLL7vYC2EthFoOL99H4VydLQAlHieo51t5M8rVLsFCkiQSLDrhbRiFjkM-veWUOIVQPqxOUFUJwcyrQJdo1VRkq5DhYptDOYYH77BgAAts4-KpcqmEqmC2lX17hkAzLcOac4yIwHPputaNq9vyI2a5"/>
+</div>
+</main>
+<!-- App Bottom Safety Padding -->
+<div class="h-md lg:hidden"></div>
+</body></html>
