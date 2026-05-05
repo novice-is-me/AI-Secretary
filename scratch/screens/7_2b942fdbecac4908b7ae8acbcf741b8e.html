@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#536346",
+                    "on-tertiary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "error": "#ba1a1a",
+                    "background": "#fbf9f4",
+                    "primary-fixed-dim": "#bacca8",
+                    "surface-variant": "#e4e2dd",
+                    "secondary-fixed-dim": "#b4c9db",
+                    "primary-fixed": "#d6e9c3",
+                    "outline": "#75786f",
+                    "surface-dim": "#dbdad5",
+                    "inverse-surface": "#30312e",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#94a684",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-bright": "#fbf9f4",
+                    "surface-container-highest": "#e4e2dd",
+                    "secondary-container": "#cde2f5",
+                    "on-surface-variant": "#444840",
+                    "outline-variant": "#c5c8bd",
+                    "inverse-primary": "#bacca8",
+                    "secondary": "#4d6171",
+                    "on-secondary-container": "#516575",
+                    "on-tertiary-fixed-variant": "#4c463e",
+                    "on-secondary-fixed": "#071e2b",
+                    "tertiary": "#645d55",
+                    "surface-container-low": "#f5f3ee",
+                    "on-tertiary-container": "#3c362f",
+                    "secondary-fixed": "#d0e5f8",
+                    "tertiary-container": "#a79f95",
+                    "surface-tint": "#536346",
+                    "on-primary-container": "#2c3b21",
+                    "on-background": "#1b1c19",
+                    "on-secondary-fixed-variant": "#354958",
+                    "on-tertiary-fixed": "#1f1b14",
+                    "on-secondary": "#ffffff",
+                    "inverse-on-surface": "#f2f1ec",
+                    "on-primary-fixed": "#111f08",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#ebe1d6",
+                    "surface-container": "#f0eee9",
+                    "surface-container-high": "#eae8e3",
+                    "surface": "#fbf9f4",
+                    "tertiary-fixed-dim": "#cec5ba",
+                    "on-surface": "#1b1c19",
+                    "on-primary-fixed-variant": "#3c4b30",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xxl": "64px",
+                    "xl": "40px",
+                    "md": "16px",
+                    "unit": "4px",
+                    "sm": "8px",
+                    "timeline-gap": "32px",
+                    "xs": "4px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(251, 249, 244, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .cloud-shadow {
+            box-shadow: 0 10px 30px -10px rgba(83, 99, 70, 0.08);
+        }
+        .timeline-connector::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 40px;
+            bottom: -20px;
+            width: 1px;
+            border-left: 1px dashed #94a684;
+            opacity: 0.3;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen pb-32">
+<!-- TopNavBar (JSON Shell) -->
+<nav class="lg:hidden flex justify-between items-center px-6 py-4 w-full fixed top-0 z-50 bg-[#fdfcfb]/80 backdrop-blur-md">
+<span class="text-xl font-bold text-[#94A684] tracking-tight">Sanctuary</span>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#94A684]" data-icon="account_circle">account_circle</span>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="pt-24 px-6 max-w-lg mx-auto">
+<!-- Header Profile Section -->
+<header class="flex flex-col items-center text-center mb-xl">
+<div class="relative mb-md">
+<div class="w-24 h-24 rounded-full overflow-hidden border-4 border-white cloud-shadow">
+<img alt="User Profile" data-alt="A serene portrait of a person with a gentle expression, captured in soft, natural morning light. The background is a blurred, minimalist studio with warm oatmeal and sage green tones. The lighting is high-key and airy, emphasizing a calm and organized digital sanctuary aesthetic. The composition is centered and clean, reflecting personal clarity and peace." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvvwFtSN6l5-5d_Mg1RZMXDkLS28TsHcpB7j8PkqUzExr7PhZsekp4AtkgJ2wxI9g2ke96WKPF7LSeDlD4yXgYCh-BSp730W0HV90fDR4HHUmpvSxHfDwUwIxE2YSClKrRhMugmBsuQ9QzuhgB90skDTOQhNUitR8PBqE4EnOt4PfjaSaQgjvOpQjoGUxqJ02LpL1uQ7YAXdM34X8L94Vt3F-D8iRFqI0zS4L1y_BQZ7D1_1YEQlXu6pQ7cVeFK5CdW-Jdv1_o8fcR"/>
+</div>
+<div class="absolute bottom-0 right-0 bg-primary w-6 h-6 rounded-full flex items-center justify-center text-white ring-4 ring-background">
+<span class="material-symbols-outlined text-[14px]" data-icon="edit" data-weight="fill" style="font-variation-settings: 'FILL' 1;">edit</span>
+</div>
+</div>
+<h1 class="font-headline-lg text-on-background">Elena Moss</h1>
+<p class="font-body-md text-outline italic">Curating a life of calm intention.</p>
+</header>
+<!-- Profile Sections (Timeline Flow) -->
+<div class="space-y-timeline-gap relative">
+<!-- Calendar Sync Card -->
+<section class="relative timeline-connector">
+<div class="flex gap-4 items-start">
+<div class="z-10 bg-primary-container text-white p-2 rounded-full flex items-center justify-center cloud-shadow">
+<span class="material-symbols-outlined text-[20px]" data-icon="calendar_today">calendar_today</span>
+</div>
+<div class="flex-1 bg-surface-container-low p-lg rounded-lg cloud-shadow border border-surface-variant/30">
+<div class="flex justify-between items-center mb-sm">
+<h2 class="font-headline-md text-primary">Calendar Sync</h2>
+<span class="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full font-label-sm">Active</span>
+</div>
+<p class="font-body-md text-on-surface-variant mb-md">Your Google and Outlook calendars are harmonized. Sanctuary is buffering your transitions.</p>
+<div class="flex items-center gap-3 py-2 px-3 bg-white/50 rounded-md">
+<img alt="Calendar Thumbnail" class="w-10 h-10 rounded-sm" data-alt="A macro photograph of a clean, white paper calendar with minimalist typography. Soft shadows from a nearby plant fall across the page, creating an atmosphere of organized tranquility. The color palette is dominated by off-whites and subtle sage green accents, perfectly aligning with a digital sanctuary design language." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEi7f2S6gkqdSC4DWnehsBqdXGb202OF5IbxG6Y0ifynRvb4FKBQCS1g6cHlIY3YCfnBnQTxC96iDUVm2hQh3Uh5ZT3B4PhhMnVxpPG26GWHPaxwbEKIJqd3xEjUEKp2X3GGstCLmGTcoDmR5KvJicBEdJ7C01v-LmtGdKMj-oX8X8p7zl6irhG1jxqoD8v24-7nfTlQYkpD0lPFovvbnlowuiiUBYxBGIBMb5SM-55LQXYweXt8yNiGke5bFkMqYnQj-T53cnrhtX"/>
+<div>
+<p class="font-label-md text-on-surface">3 Events Buffered Today</p>
+<p class="text-[12px] text-outline">Next: Focus Block at 2:00 PM</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Personal Focus Preferences -->
+<section class="relative timeline-connector">
+<div class="flex gap-4 items-start">
+<div class="z-10 bg-secondary-container text-secondary p-2 rounded-full flex items-center justify-center cloud-shadow">
+<span class="material-symbols-outlined text-[20px]" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div class="flex-1 bg-surface-container-low p-lg rounded-lg cloud-shadow border border-surface-variant/30">
+<h2 class="font-headline-md text-secondary mb-sm">Personal Focus</h2>
+<p class="font-body-md text-on-surface-variant mb-lg">Your companion adapts to these core values during deep work.</p>
+<div class="flex flex-wrap gap-sm">
+<span class="px-4 py-2 bg-surface-container-highest rounded-full text-on-surface-variant font-label-md flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]" data-icon="nature_people">nature_people</span>
+                                Mindful
+                            </span>
+<span class="px-4 py-2 bg-surface-container-highest rounded-full text-on-surface-variant font-label-md flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]" data-icon="bolt">bolt</span>
+                                Efficient
+                            </span>
+<span class="px-4 py-2 bg-primary/10 text-primary rounded-full font-label-md border border-primary/20 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]" data-icon="spa">spa</span>
+                                Serene
+                            </span>
+<span class="px-4 py-2 bg-surface-container-highest rounded-full text-on-surface-variant font-label-md flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]" data-icon="edit_note">edit_note</span>
+                                Brief
+                            </span>
+</div>
+</div>
+</div>
+</section>
+<!-- User Settings -->
+<section class="relative">
+<div class="flex gap-4 items-start">
+<div class="z-10 bg-surface-container-highest text-outline p-2 rounded-full flex items-center justify-center cloud-shadow">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+</div>
+<div class="flex-1 bg-surface-container-low p-lg rounded-lg cloud-shadow border border-surface-variant/30">
+<h2 class="font-headline-md text-on-surface mb-md">Settings</h2>
+<div class="space-y-unit">
+<button class="w-full flex items-center justify-between p-md hover:bg-surface-variant/20 rounded-md transition-colors text-left group">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="notifications">notifications</span>
+<span class="font-body-md text-on-surface-variant">Notification Vibe</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-md hover:bg-surface-variant/20 rounded-md transition-colors text-left group">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="palette">palette</span>
+<span class="font-body-md text-on-surface-variant">Appearance</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-md hover:bg-surface-variant/20 rounded-md transition-colors text-left group">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="shield">shield</span>
+<span class="font-body-md text-on-surface-variant">Privacy &amp; Safety</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</button>
+<div class="pt-lg mt-lg border-t border-surface-variant/30">
+<button class="w-full text-center py-md text-error font-label-md hover:bg-error/5 rounded-md transition-colors">
+                                    Sign Out
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Secretary Pulse (Visual Element) -->
+<div class="mt-xl flex flex-col items-center">
+<div class="w-12 h-12 bg-gradient-to-tr from-primary/20 via-secondary/10 to-primary/20 rounded-full blur-xl animate-pulse"></div>
+<p class="text-[10px] uppercase tracking-widest text-outline mt-sm font-label-sm">Companion Presence Active</p>
+</div>
+</main>
+<!-- BottomNavBar (JSON Shell) -->
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-white/70 backdrop-blur-xl">
+<div class="flex justify-around items-center w-full max-w-sm mx-auto bg-surface-container/50 rounded-full p-2 cloud-shadow">
+<!-- Huddle -->
+<button class="flex flex-col items-center justify-center text-[#767873] p-3 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-plus-jakarta-sans text-[10px] font-medium mt-1">Huddle</span>
+</button>
+<!-- Timeline -->
+<button class="flex flex-col items-center justify-center text-[#767873] p-3 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span class="font-plus-jakarta-sans text-[10px] font-medium mt-1">Timeline</span>
+</button>
+<!-- Profile (Active State Applied via style_active_navigation) -->
+<button class="flex flex-col items-center justify-center bg-[#94A684] text-white rounded-full p-3 active:scale-95 transition-transform shadow-lg shadow-[#94A684]/20">
+<span class="material-symbols-outlined" data-icon="person" data-weight="fill" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-plus-jakarta-sans text-[10px] font-medium mt-1">Profile</span>
+</button>
+</div>
+</nav>
+</body></html>
