@@ -355,6 +355,47 @@ def _generate_schedule(tasks, start_hour=9, schedule_date=None):
     return sorted(schedule, key=lambda item: (item['schedule_date'], item['start_time']))
 
 
+def _task_title_key(task):
+    return str(task.get('title') or task.get('task') or '').strip().lower()
+
+
+def _merge_task_inputs(existing_tasks, incoming_tasks, schedule_date):
+    if incoming_tasks is None:
+        return list(existing_tasks or [])
+
+    merged = [dict(task) for task in (existing_tasks or [])]
+    existing_ids = {str(task.get('id')) for task in merged if task.get('id') is not None}
+    numeric_ids = [int(task_id) for task_id in existing_ids if task_id.isdigit()]
+    next_id = (max(numeric_ids) + 1) if numeric_ids else 1
+
+    for incoming in incoming_tasks:
+        incoming_date = _task_schedule_date(incoming, schedule_date)
+        incoming_key = _task_title_key(incoming)
+        match_index = None
+
+        for idx, existing in enumerate(merged):
+            if _task_schedule_date(existing, schedule_date) != incoming_date:
+                continue
+            if incoming_key and _task_title_key(existing) == incoming_key:
+                match_index = idx
+                break
+
+        normalized = {**incoming, 'schedule_date': incoming_date}
+        if match_index is not None:
+            normalized['id'] = merged[match_index].get('id') or normalized.get('id') or next_id
+            merged[match_index] = {**merged[match_index], **normalized}
+            existing_ids.add(str(normalized['id']))
+            continue
+
+        if normalized.get('id') is None or str(normalized.get('id')) in existing_ids:
+            normalized['id'] = next_id
+            next_id += 1
+        existing_ids.add(str(normalized['id']))
+        merged.append(normalized)
+
+    return merged
+
+
 def _api_success(data):
     return {'success': True, 'data': data, 'error': None}
 
@@ -384,9 +425,6 @@ def parse_text(request):
     schedule_date = _normalize_schedule_date(body.get('schedule_date') if 'body' in locals() else request.POST.get('schedule_date'))
     tasks = [{**task, 'schedule_date': schedule_date} for task in _parse_raw_tasks(raw)]
     request.session['parsed_tasks'] = tasks
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    profile.parsed_tasks = tasks
-    profile.save(update_fields=['parsed_tasks'])
     return JsonResponse({**_api_success({'tasks': tasks}), 'tasks': tasks})
 
 
@@ -402,9 +440,6 @@ def upload_image(request):
     schedule_date = _normalize_schedule_date(request.POST.get('schedule_date'))
     tasks = [{**task, 'schedule_date': schedule_date} for task in _parse_raw_tasks(extracted)]
     request.session['parsed_tasks'] = tasks
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    profile.parsed_tasks = tasks
-    profile.save(update_fields=['parsed_tasks'])
     return JsonResponse({
         **_api_success({'extracted_text': extracted, 'tasks': tasks}),
         'extracted_text': extracted,
@@ -434,10 +469,11 @@ def generate_schedule(request):
     try:
         body       = json.loads(request.body)
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        tasks      = body.get('tasks') or request.session.get('parsed_tasks', []) or profile.parsed_tasks
         start_hour = int(body.get('start_hour', 9))
         schedule_date = _normalize_schedule_date(body.get('schedule_date'))
         reshuffle = bool(body.get('reshuffle'))
+        stored_tasks = profile.parsed_tasks or request.session.get('parsed_tasks', [])
+        tasks = _merge_task_inputs(stored_tasks, body.get('tasks'), schedule_date)
     except (json.JSONDecodeError, AttributeError, ValueError):
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
         tasks      = request.session.get('parsed_tasks', []) or profile.parsed_tasks
@@ -461,6 +497,29 @@ def generate_schedule(request):
         return JsonResponse({**_api_error('No tasks for this date.'), 'schedule': []}, status=400)
 
     day_schedule = _generate_schedule(selected_tasks, start_hour=start_hour, schedule_date=schedule_date)
+    scheduled_by_id = {
+        str(item.get('id')): item
+        for item in day_schedule
+        if item.get('id') is not None
+    }
+    scheduled_by_title = {
+        item.get('title') or item.get('task'): item
+        for item in day_schedule
+    }
+    normalized_tasks = [
+        {
+            **task,
+            **({
+                'time': scheduled['start_time'],
+                'start_time': scheduled['start_time'],
+                'end_time': scheduled['end_time'],
+            } if (scheduled := (
+                scheduled_by_id.get(str(task.get('id')))
+                or scheduled_by_title.get(task.get('title') or task.get('task'))
+            )) and _task_schedule_date(task, schedule_date) == schedule_date else {}),
+        }
+        for task in normalized_tasks
+    ]
     preserved_schedule = [
         item for item in (profile.schedule or request.session.get('schedule', []))
         if _task_schedule_date(item, schedule_date) != schedule_date

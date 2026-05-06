@@ -241,12 +241,20 @@
 
 <script>
 const STORAGE_KEY = 'sanctuary_huddle_messages';
+const HISTORY_VISIBLE_KEY = 'sanctuary_huddle_history_visible';
 const PROFILE_IMAGE_URL = '{{ profile_image_url|escapejs }}';
-let showHistory = false;
+let showHistory = localStorage.getItem(HISTORY_VISIBLE_KEY) !== 'false';
 
 // ── Helpers ──────────────────────────────────────────
 function getStoredMessages() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    try {
+        return (JSON.parse(localStorage.getItem(STORAGE_KEY)) || []).map(msg => {
+            if (msg.role) return msg;
+            const text = String(msg.text || '').trim();
+            const looksLikeAssistant = /^(i found|found|extracted|could not|network error|building your schedule|something went wrong)/i.test(text);
+            return { ...msg, role: looksLikeAssistant ? 'assistant' : 'user' };
+        });
+    }
     catch { return []; }
 }
 function getMessages() {
@@ -267,6 +275,12 @@ function scrollToBottom() {
 function avatarMarkup() {
     return `<img src="${PROFILE_IMAGE_URL}" alt="{{ display_name|escapejs }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-top:4px;" />`;
 }
+function assistantAvatarMarkup() {
+    return `
+        <div style="width:32px;height:32px;border-radius:50%;background:#94a684;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:4px;">
+            <span class="material-symbols-outlined" style="font-size:17px;color:white;font-variation-settings:'FILL' 1;">spa</span>
+        </div>`;
+}
 
 // ── Bubble builders ───────────────────────────────────
 function createTextBubble(text, time) {
@@ -278,6 +292,19 @@ function createTextBubble(text, time) {
         <div style="background:#536346;color:white;padding:14px 16px;border-radius:16px;border-bottom-right-radius:4px;box-shadow:0 2px 8px rgba(83,99,70,0.2);">
             <p style="font-size:15px;margin:0 0 4px;line-height:1.55;white-space:pre-wrap;">${escapeHtml(text)}</p>
             <span style="font-size:10px;opacity:0.65;display:block;text-align:right;">${time}</span>
+        </div>`;
+    return w;
+}
+
+function createAssistantBubble(text, time) {
+    const w = document.createElement('div');
+    w.className = 'assistant-msg-bubble';
+    w.style.cssText = 'display:flex;gap:12px;max-width:85%;margin-right:auto;margin-top:12px;';
+    w.innerHTML = `
+        ${assistantAvatarMarkup()}
+        <div style="background:#f5f3ee;color:#1b1c19;padding:14px 16px;border-radius:16px;border-bottom-left-radius:4px;box-shadow:0 2px 8px rgba(83,99,70,0.08);border:1px solid rgba(197,200,189,0.35);">
+            <p style="font-size:15px;margin:0 0 4px;line-height:1.55;white-space:pre-wrap;">${escapeHtml(text)}</p>
+            <span style="font-size:10px;color:#75786f;display:block;text-align:left;">${time || ''}</span>
         </div>`;
     return w;
 }
@@ -305,18 +332,24 @@ function renderMessages() {
     ];
     feeds.forEach(container => {
         if (!container) return;
-        container.querySelectorAll('.user-msg-bubble,.history-access').forEach(el => el.remove());
+        container.querySelectorAll('.user-msg-bubble,.assistant-msg-bubble,.history-access').forEach(el => el.remove());
         if (!showHistory && storedCount) {
             const history = document.createElement('button');
             history.className = 'history-access';
             history.type = 'button';
             history.style.cssText = 'align-self:center;display:flex;align-items:center;gap:8px;border:1px solid rgba(148,166,132,0.35);background:#f5f3ee;color:#536346;border-radius:9999px;padding:9px 14px;font-size:12px;font-weight:700;font-family:"Plus Jakarta Sans",sans-serif;cursor:pointer;margin:6px auto 10px;';
             history.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px;">history</span> View previous chat (${storedCount})`;
-            history.addEventListener('click', () => { showHistory = true; renderMessages(); });
+            history.addEventListener('click', () => {
+                showHistory = true;
+                localStorage.setItem(HISTORY_VISIBLE_KEY, 'true');
+                renderMessages();
+            });
             container.appendChild(history);
         }
         msgs.forEach(msg => {
-            const el = msg.type === 'image'
+            const el = msg.role === 'assistant'
+                ? createAssistantBubble(msg.text || '', msg.time)
+                : msg.type === 'image'
                 ? createImageBubble(msg.dataUrl, msg.time)
                 : createTextBubble(msg.text, msg.time);
             container.appendChild(el);
@@ -335,9 +368,10 @@ function sendMessage(inputEl) {
     const text = inputEl.value.trim();
     if (!text) return;
     const msgs = getStoredMessages();
-    msgs.push({ type: 'text', text, time: timeLabel() });
+    msgs.push({ type: 'text', role: 'user', text, time: timeLabel() });
     saveMessages(msgs);
     showHistory = true;
+    localStorage.setItem(HISTORY_VISIBLE_KEY, 'true');
     inputEl.value = '';
     renderMessages();
     scrollToBottom();
@@ -346,9 +380,10 @@ function sendMessage(inputEl) {
 // ── Send image ────────────────────────────────────────
 function sendImage(dataUrl) {
     const msgs = getStoredMessages();
-    msgs.push({ type: 'image', dataUrl, time: timeLabel() });
+    msgs.push({ type: 'image', role: 'user', dataUrl, time: timeLabel() });
     saveMessages(msgs);
     showHistory = true;
+    localStorage.setItem(HISTORY_VISIBLE_KEY, 'true');
     renderMessages();
     scrollToBottom();
 }
@@ -601,6 +636,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="time" data-idx="${i}" data-field="time" value="${time}"
                         title="Pin to a specific time (leave blank to auto-schedule)"
                         style="font-size:12px; color:${time ? '#536346' : '#75786f'}; border:1px solid rgba(197,200,189,0.5); border-radius:6px; padding:2px 6px; font-family:'Plus Jakarta Sans',sans-serif;" />
+                    <button type="button" data-idx="${i}" data-time-auto title="Let Sanctuary choose the best open time"
+                        style="font-size:11px; color:#536346; border:1px solid rgba(148,166,132,0.35); border-radius:9999px; padding:4px 8px; background:#f5f3ee; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif;">Auto</button>
                     <input type="number" data-idx="${i}" data-field="duration"
                         value="${duration}" min="5" max="480"
                         style="width:52px; font-size:12px; color:#75786f; border:1px solid rgba(197,200,189,0.5); border-radius:6px; padding:2px 6px; text-align:center; font-family:'Plus Jakarta Sans',sans-serif;" />
@@ -626,6 +663,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentTasks[idx].time = el.value || null;
                     el.style.color = el.value ? '#536346' : '#75786f';
                 }
+            });
+        });
+
+        list.querySelectorAll('[data-time-auto]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.dataset.idx, 10);
+                const input = list.querySelector(`[data-field="time"][data-idx="${idx}"]`);
+                if (input) {
+                    input.value = '';
+                    input.style.color = '#75786f';
+                }
+                currentTasks[idx].time = null;
             });
         });
 

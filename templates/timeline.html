@@ -287,7 +287,10 @@
       </div>
       <div style="flex:1;">
       <label style="font-size:12px; font-weight:600; color:#536346; letter-spacing:0.08em; text-transform:uppercase; display:block; margin-bottom:6px;">Start Time <span style="font-weight:400; text-transform:none; letter-spacing:0; color:#75786f;">(optional)</span></label>
-      <input id="at-time" type="time" style="width:100%; padding:12px 16px; border:1px solid rgba(197,200,189,0.6); border-radius:12px; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif; color:#1b1c19; background:#fafaf8; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#94a684'" onblur="this.style.borderColor='rgba(197,200,189,0.6)'" />
+      <div style="display:flex; gap:8px;">
+        <input id="at-time" type="time" style="width:100%; padding:12px 16px; border:1px solid rgba(197,200,189,0.6); border-radius:12px; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif; color:#1b1c19; background:#fafaf8; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#94a684'" onblur="this.style.borderColor='rgba(197,200,189,0.6)'" />
+        <button type="button" onclick="setAddTaskAutoTime()" title="Let Sanctuary choose the best open time" style="padding:0 14px; border:1px solid rgba(148,166,132,0.35); border-radius:12px; background:#f5f3ee; color:#536346; font-size:12px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer;">Auto</button>
+      </div>
       </div>
     </div>
     <div id="at-error" style="display:none; font-size:13px; color:#b91c1c; margin-bottom:12px; font-style:italic;"></div>
@@ -379,6 +382,11 @@ function openAddTaskModal() {
 
 function closeAddTaskModal() {
   document.getElementById('add-task-modal').style.display = 'none';
+}
+
+function setAddTaskAutoTime() {
+  document.getElementById('at-time').value = '';
+  document.getElementById('at-time').focus();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

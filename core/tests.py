@@ -26,6 +26,7 @@ class AuthFlowTests(TestCase):
         response = self.client.post(reverse('logout'))
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "localStorage.removeItem('sanctuary_huddle_messages')")
+        self.assertContains(response, "localStorage.setItem('sanctuary_huddle_history_visible', 'false')")
         self.assertContains(response, reverse('home'))
 
     def test_login_email_is_case_insensitive(self):
@@ -172,6 +173,70 @@ class MockAIPipelineTests(TestCase):
 
         schedule = second.json()['schedule']
         self.assertEqual({item['schedule_date'] for item in schedule}, {today, tomorrow})
+
+    def test_auto_task_uses_next_open_slot_without_overwriting_existing_schedule(self):
+        today = timezone.localdate().isoformat()
+        first_tasks = [
+            {'id': 1, 'title': 'First auto', 'task': 'First auto', 'duration': 30, 'priority_key': 'medium', 'schedule_date': today},
+        ]
+        self.client.post(
+            reverse('generate_schedule'),
+            data=json.dumps({'schedule_date': today, 'tasks': first_tasks}),
+            content_type='application/json',
+        )
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.parsed_tasks[0]['time'], '09:00')
+
+        second_tasks = self.user.profile.parsed_tasks + [
+            {'id': 2, 'title': 'Second auto', 'task': 'Second auto', 'duration': 30, 'priority_key': 'medium', 'time': None, 'schedule_date': today},
+        ]
+        response = self.client.post(
+            reverse('generate_schedule'),
+            data=json.dumps({'schedule_date': today, 'tasks': second_tasks}),
+            content_type='application/json',
+        )
+
+        schedule = response.json()['schedule']
+        first = next(item for item in schedule if item['task'] == 'First auto')
+        second = next(item for item in schedule if item['task'] == 'Second auto')
+        self.assertEqual(first['start_time'], '09:00')
+        self.assertEqual(second['start_time'], '09:40')
+
+    def test_huddle_parse_then_generate_appends_auto_task_to_existing_day(self):
+        today = timezone.localdate().isoformat()
+        self.client.post(
+            reverse('parse_text'),
+            data=json.dumps({'text': 'First auto for 30 minutes', 'schedule_date': today}),
+            content_type='application/json',
+        )
+        self.client.post(
+            reverse('generate_schedule'),
+            data=json.dumps({
+                'schedule_date': today,
+                'tasks': [{'id': 1, 'title': 'First auto', 'task': 'First auto', 'duration': 30, 'priority_key': 'medium', 'schedule_date': today}],
+            }),
+            content_type='application/json',
+        )
+
+        self.client.post(
+            reverse('parse_text'),
+            data=json.dumps({'text': 'Second auto for 30 minutes', 'schedule_date': today}),
+            content_type='application/json',
+        )
+        response = self.client.post(
+            reverse('generate_schedule'),
+            data=json.dumps({
+                'schedule_date': today,
+                'tasks': [{'id': 1, 'title': 'Second auto', 'task': 'Second auto', 'duration': 30, 'priority_key': 'medium', 'schedule_date': today}],
+            }),
+            content_type='application/json',
+        )
+
+        schedule = response.json()['schedule']
+        first = next(item for item in schedule if item['task'] == 'First auto')
+        second = next(item for item in schedule if item['task'] == 'Second auto')
+        self.assertEqual(first['start_time'], '09:00')
+        self.assertEqual(second['start_time'], '09:40')
 
     def test_reshuffle_clears_selected_day_pinned_times_only(self):
         today = timezone.localdate().isoformat()
