@@ -147,62 +147,22 @@
       
       <!-- Sync Card -->
       <section style="background:white; padding:24px; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(228,226,221,0.5);">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
-          <div style="display:flex; gap:12px; align-items:center;">
-             <!-- Mobile uses an icon outside the card, Desktop puts it inside header. Let's merge -->
-             <div class="lg:hidden" style="background:#94a684; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(148,166,132,0.3);">
-                <span class="material-symbols-outlined" style="font-size:18px;">calendar_today</span>
-             </div>
-             <h2 style="font-size:24px; font-weight:400; color:#1b1c19; margin:0;">Calendar Sync</h2>
-          </div>
-          <span style="background:#E6F4EA; color:#137333; padding:4px 12px; border-radius:9999px; font-size:12px; font-weight:600; display:flex; align-items:center; gap:6px;">
-            <span style="width:6px; height:6px; border-radius:50%; background:#137333;"></span> Active
-          </span>
-        </div>
-        
-        <p class="lg:hidden" style="font-size:16px; color:#444840; margin:0 0 16px; line-height:1.6;">Your Google and Outlook calendars are harmonized. Sanctuary is buffering your transitions.</p>
-
-        <div style="display:flex; flex-direction:column; gap:24px;">
-          <div style="display:flex; align-items:center; gap:16px; padding:16px; background:#f0eee9; border-radius:12px;">
-            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1Dsm3f7Ksfhe3qT6qc7uRTCDSHp6UICbB2PCe1vpARA-ofPUTPT8OOa4Wy8DsVdzUB4edSvSeSJR1iDpd9Yavn-7dz6SNFRMTsXpAiO6Kq792zf-wYIVAO-KAnQ21jxZ_g5nvY5krDF-PQ07W-OInMB2OTf9QT0j1gGL2prRp7okFUsVmJEwOrHNLYoNjc813UsbNkAmqpj-06RTSJSvrEFTZZVwqiaYWAcYCfXjmgve4zSPd4-xoOEGp2iqVnDCDZk8arDn3sYC4" alt="Google" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" />
-            <div style="flex:1;">
-              <p style="font-size:14px; font-weight:600; color:#1b1c19; margin:0;">Google Calendar</p>
-              <p style="font-size:12px; color:#75786f; margin:0;">{{ user.email }}</p>
-            </div>
-            <button style="color:#536346; font-size:14px; font-weight:600; background:none; border:none; cursor:pointer;">Manage</button>
-          </div>
-          
-          <div style="display:flex; align-items:center; gap:16px; padding:16px; background:rgba(240,238,233,0.5); border-radius:12px; cursor:pointer;">
-            <div style="width:40px; height:40px; border-radius:50%; background:#fbf9f4; display:flex; align-items:center; justify-content:center;">
-              <span class="material-symbols-outlined" style="color:#75786f;">add</span>
-            </div>
-            <p style="font-size:14px; font-weight:500; color:#75786f; margin:0;">Integrate Outlook...</p>
-          </div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;">
+          <h2 style="font-size:24px; font-weight:400; color:#1b1c19; margin:0;">Calendar Sync</h2>
         </div>
 
-        <!-- Buffer Summary Block -->
-        <div style="margin-top:40px; padding:24px; background:rgba(205,226,245,0.2); border-radius:12px; border-left:4px solid #cde2f5;">
-          <div style="display:flex; align-items:center; gap:24px; justify-content:space-between;">
-            <div>
-              <h3 style="font-size:14px; font-weight:600; color:#516575; margin:0 0 4px;">Daily Buffer Summary</h3>
-              <p style="font-size:16px; color:rgba(81,101,117,0.8); margin:0 0 8px;">3 Events Buffered Today</p>
-              <p class="lg:hidden" style="font-size:12px; color:#75786f; margin:0 0 8px;">Next: Focus Block at 2:00 PM</p>
-              <a href="{% url 'timeline' %}" style="display:flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:#4d6171; text-decoration:none;">
-                View Timeline <span class="material-symbols-outlined" style="font-size:16px;">arrow_forward</span>
-              </a>
-            </div>
-            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBo22ehSllDBRV68ZGMbufj6fTytP9VojXX3Sp7TLyGH-cpRKt1qi3uZEXQcA8JQps2cRuvbHItxbEPHKBgjxyzFpDht9o36jglBHy6_TUcw_f3zsYeF83Bkf2kDU1Th-8W3Y8VX-_MGIBjaqe9l1QXXYXtRvU-tiYbf9Xh0864W5GE22oTFYNjTTCw6aAIbWQZybhlKmhJLuWPx03Z9xC4PiLNOvmkd1D0vFCVYHmK5FI_atZMxJbQLoDIR33qgAlPvao8S8Gtzm6s" style="width:80px; height:80px; border-radius:8px; object-fit:cover; box-shadow:0 2px 8px rgba(0,0,0,0.05);" />
+        <!-- Coming Soon -->
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:48px 24px; text-align:center; gap:16px;">
+          <div style="width:64px; height:64px; background:#f0eee9; border-radius:16px; display:flex; align-items:center; justify-content:center;">
+            <span class="material-symbols-outlined" style="font-size:32px; color:#94a684;">calendar_month</span>
           </div>
+          <div>
+            <h3 style="font-size:18px; font-weight:500; color:#1b1c19; margin:0 0 8px;">Calendar Integration</h3>
+            <p style="font-size:14px; color:#75786f; margin:0; line-height:1.6; max-width:280px;">Connect Google Calendar and Outlook to sync your schedule with Sanctuary.</p>
+          </div>
+          <span style="background:#f0eee9; color:#536346; padding:6px 16px; border-radius:9999px; font-size:12px; font-weight:600;">Coming Soon</span>
         </div>
       </section>
-
-      <!-- Mobile Companion Pulse -->
-      <div class="lg:hidden" style="display:flex; flex-direction:column; items-center:center; text-align:center; margin-top:24px;">
-        <div style="width:48px; height:48px; background:linear-gradient(to top right, rgba(83,99,70,0.2), rgba(77,97,113,0.1)); border-radius:50%; margin:0 auto 8px; filter:blur(12px); animation:pulse 2s infinite;"></div>
-        <p style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.15em; color:#75786f;">Companion Presence Active</p>
-      </div>
-
-      <p class="hidden lg:block" style="text-align:center; font-size:12px; color:#75786f; margin-top:24px;">Version 2.4.1 — Sanctum AI 2024</p>
     </div>
   </div>
 
