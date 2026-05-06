@@ -53,7 +53,7 @@
             </div>
 
             <!-- Form -->
-            <form method="post" action="#" style="display:flex; flex-direction:column; gap:10px;">
+            <form method="post" action="{% url 'register' %}" style="display:flex; flex-direction:column; gap:10px;">
                 {% csrf_token %}
 
                 <!-- Full Name -->

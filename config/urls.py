@@ -15,33 +15,22 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.shortcuts import render
-
-def home(request):
-    return render(request, 'home.html')
-
-def login_view(request):
-    return render(request, 'login.html')
-
-def register_view(request):
-    return render(request, 'register.html')
-
-def huddle_view(request):
-    return render(request, 'huddle.html')
-
-def timeline_view(request):
-    return render(request, 'timeline.html')
-
-def profile_view(request):
-    return render(request, 'profile.html')
+from core.views import home, login_view, logout_view, register_view, huddle_view, timeline_view, profile_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
     path('', home, name='home'),
     path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
     path('register/', register_view, name='register'),
     path('huddle/', huddle_view, name='huddle'),
     path('timeline/', timeline_view, name='timeline'),
     path('profile/', profile_view, name='profile'),
+
+    # Backend/auth endpoints
+    path('', include('core.urls')),
+    #path('accounts/', include('django.contrib.auth.urls')),
 ]

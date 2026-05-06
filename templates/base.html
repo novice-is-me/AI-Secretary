@@ -16,7 +16,12 @@
       <div class="flex gap-4 text-sm">
         <a href="#" class="text-gray-600 hover:text-gray-900">Dashboard</a>
         <a href="#" class="text-gray-600 hover:text-gray-900">Schedule</a>
-        <a href="#" class="text-gray-600 hover:text-gray-900">Logout</a>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="text-gray-600 hover:text-gray-900">
+            Logout
+          </button>
+        </form>
       </div>
     </nav>
 

@@ -63,12 +63,19 @@
     <!-- Bottom: user card -->
     <div style="display:flex; flex-direction:column; gap:12px;">
         <a href="{% url 'profile' %}" style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#f0eee9; border-radius:12px; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='#e4e2dd'" onmouseout="this.style.background='#f0eee9'">
-            <img id="sidebarProfileImg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBu_xO0f0Ef5cBH9hxdFohRZwzHX-wi4N_yJDq7FHi558ct_BmaAuMnYU6Eef4VHsutSBh7rklwEadzc6uSuXn5BTytIb90dKVIo5J6GZq2tweF4LD4mzEzOmAOD9XECoSA79mBatyOCvWbLKAYwtrcUjFVh66JlhgswtrwSLZAV5mdRJSXh2Tq1clhw_UVs2AqNPvSB-N0UJrhEu3OxkZ_DRMTCbQT-xoQDRKbgguYGsDV1bxk6xRzBZVFElZu1QlfjWdyGDjuhoW8" alt="User" style="width:32px; height:32px; border-radius:50%; object-fit:cover;" />
+            <img id="sidebarProfileImg" src="{{ profile_image_url }}" alt="{{ display_name }}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;" />
             <div style="display:flex; flex-direction:column;">
-                <span style="font-size:14px; font-weight:600; color:#1b1c19;">Alex Rivera</span>
+                <span style="font-size:14px; font-weight:600; color:#1b1c19;">{{ display_name }}</span>
                 <span style="font-size:10px; color:#75786f;">Focus Mode</span>
             </div>
         </a>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" style="width:100%; display:flex; align-items:center; gap:12px; padding:12px 16px; background:transparent; border:none; border-radius:12px; color:#75786f; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#f2f0ed'" onmouseout="this.style.background='transparent'">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Logout</span>
+            </button>
+        </form>
     </div>
 </aside>
 
@@ -83,20 +90,29 @@
 
 <!-- ── Main Content Area ── -->
 <main class="prof-main" style="flex:1; padding:24px 40px; font-family:'Plus Jakarta Sans',sans-serif;">
+  {% if messages %}
+    <div style="max-width:1000px; margin:24px auto 0; display:flex; flex-direction:column; gap:8px;">
+      {% for message in messages %}
+        <div style="background:{% if message.tags == 'error' %}#fee2e2{% else %}#e6f4ea{% endif %}; color:{% if message.tags == 'error' %}#991b1b{% else %}#137333{% endif %}; border-radius:12px; padding:12px 16px; font-size:14px; font-weight:600;">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
   
   <!-- Profile Hero Section -->
   <section class="prof-hero" style="display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:40px;">
     <div style="position:relative; margin-bottom:16px;">
       <div style="width:128px; height:128px; border-radius:50%; overflow:hidden; border:4px solid white; box-shadow:0 10px 30px -10px rgba(83,99,70,0.15); transition:transform 0.5s ease-out;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-        <img id="mainProfileImg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEKKx_LNveGYkwrZFX_FhOd-isF0dMjkcvIQpC13iNpsPh2HD4IOcU7QSW4FM-iiAQX7xfFrqJnJotorPSydNtr3EZkOPqHSq_fpndTO5foeZh0Ikj9Q_jO2wv3CKOpuvON0lTvKj4XJjBVshyon3-ilBgNff0ieS8P6SeOOnhYWU6KNPgitE1W79LQIXRwP_tssPyIIKOKgUnHjp72_YmDF8yxJl9ProCY3G9ZuDEMfCuZp1D2SrPzhRciKxj1n6nTLFCGAFrOodz" alt="Elena Moss" style="width:100%; height:100%; object-fit:cover;" />
+        <img id="mainProfileImg" src="{{ profile_image_url }}" alt="{{ display_name }}" style="width:100%; height:100%; object-fit:cover;" />
       </div>
       <button id="editProfilePicBtn" style="position:absolute; bottom:0; right:0; background:#94a684; color:white; width:36px; height:36px; border-radius:50%; border:3px solid #fbf9f4; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
         <span class="material-symbols-outlined" style="font-size:18px;">edit</span>
       </button>
       <input type="file" id="profileImageInput" accept="image/*" style="display:none;" />
     </div>
-    <h1 style="font-size:32px; font-weight:800; color:#1b1c19; margin:0 0 8px; letter-spacing:-0.02em;">Elena Moss</h1>
-    <p style="font-size:18px; color:#75786f; margin:0; font-style:italic;">Curating a life of calm intention</p>
+    <h1 style="font-size:32px; font-weight:800; color:#1b1c19; margin:0 0 8px; letter-spacing:-0.02em;">{{ display_name }}</h1>
+    <p style="font-size:18px; color:#75786f; margin:0; font-style:italic;">{{ profile.bio }}</p>
     
     <!-- Mobile specific Edit Button -->
     <button class="lg:hidden" style="margin-top:16px; padding:8px 24px; border:1px solid rgba(117,120,111,0.3); border-radius:9999px; color:#444840; font-size:14px; font-weight:500; background:transparent;">Edit Profile</button>
@@ -108,18 +124,20 @@
     <!-- Left: Account Details -->
     <section style="background:white; padding:24px; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(228,226,221,0.5);">
       <h2 style="font-size:24px; font-weight:400; color:#1b1c19; margin:0 0 24px;">Account Details</h2>
-      <form style="display:flex; flex-direction:column; gap:16px;">
+      <form method="post" action="{% url 'profile' %}" style="display:flex; flex-direction:column; gap:16px;">
+        {% csrf_token %}
+        <input type="hidden" id="avatarDataInput" name="avatar_data" value="" />
         <div>
           <label style="display:block; font-size:14px; font-weight:500; color:#75786f; margin-bottom:8px;">Full Name</label>
-          <input type="text" value="Elena Moss" style="width:100%; background:#f0eee9; border:none; border-radius:8px; padding:12px 16px; font-size:16px; color:#1b1c19; outline:none;" />
+          <input type="text" name="full_name" value="{{ display_name }}" style="width:100%; background:#f0eee9; border:none; border-radius:8px; padding:12px 16px; font-size:16px; color:#1b1c19; outline:none;" />
         </div>
         <div>
           <label style="display:block; font-size:14px; font-weight:500; color:#75786f; margin-bottom:8px;">Bio</label>
-          <textarea rows="2" style="width:100%; background:#f0eee9; border:none; border-radius:8px; padding:12px 16px; font-size:16px; color:#1b1c19; outline:none; resize:none;">Curating a life of calm intention</textarea>
+          <textarea name="bio" rows="2" style="width:100%; background:#f0eee9; border:none; border-radius:8px; padding:12px 16px; font-size:16px; color:#1b1c19; outline:none; resize:none;">{{ profile.bio }}</textarea>
         </div>
         <div>
           <label style="display:block; font-size:14px; font-weight:500; color:#75786f; margin-bottom:8px;">Email</label>
-          <input type="email" value="elena.m@gmail.com" style="width:100%; background:#f0eee9; border:none; border-radius:8px; padding:12px 16px; font-size:16px; color:#1b1c19; outline:none;" />
+          <input type="email" name="email" value="{{ user.email }}" style="width:100%; background:#f0eee9; border:none; border-radius:8px; padding:12px 16px; font-size:16px; color:#1b1c19; outline:none;" />
         </div>
         <button type="submit" style="margin-top:24px; width:100%; padding:16px; background:#94a684; color:white; border-radius:9999px; font-size:14px; font-weight:600; border:none; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Save Changes</button>
       </form>
@@ -150,7 +168,7 @@
             <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1Dsm3f7Ksfhe3qT6qc7uRTCDSHp6UICbB2PCe1vpARA-ofPUTPT8OOa4Wy8DsVdzUB4edSvSeSJR1iDpd9Yavn-7dz6SNFRMTsXpAiO6Kq792zf-wYIVAO-KAnQ21jxZ_g5nvY5krDF-PQ07W-OInMB2OTf9QT0j1gGL2prRp7okFUsVmJEwOrHNLYoNjc813UsbNkAmqpj-06RTSJSvrEFTZZVwqiaYWAcYCfXjmgve4zSPd4-xoOEGp2iqVnDCDZk8arDn3sYC4" alt="Google" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" />
             <div style="flex:1;">
               <p style="font-size:14px; font-weight:600; color:#1b1c19; margin:0;">Google Calendar</p>
-              <p style="font-size:12px; color:#75786f; margin:0;">elena.m@gmail.com</p>
+              <p style="font-size:12px; color:#75786f; margin:0;">{{ user.email }}</p>
             </div>
             <button style="color:#536346; font-size:14px; font-weight:600; background:none; border:none; cursor:pointer;">Manage</button>
           </div>
@@ -222,13 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarProfileImg = document.getElementById('sidebarProfileImg');
     const editProfilePicBtn = document.getElementById('editProfilePicBtn');
     const profileImageInput = document.getElementById('profileImageInput');
-
-    // Load saved image from localStorage on page load
-    const savedImage = localStorage.getItem('sanctuary_profile_pic');
-    if (savedImage) {
-        if (mainProfileImg) mainProfileImg.src = savedImage;
-        if (sidebarProfileImg) sidebarProfileImg.src = savedImage;
-    }
+    const avatarDataInput = document.getElementById('avatarDataInput');
 
     // Trigger file input when edit button is clicked
     if (editProfilePicBtn && profileImageInput) {
@@ -246,8 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Update images in DOM
                     if (mainProfileImg) mainProfileImg.src = base64Image;
                     if (sidebarProfileImg) sidebarProfileImg.src = base64Image;
-                    // Save to localStorage
-                    localStorage.setItem('sanctuary_profile_pic', base64Image);
+                    if (avatarDataInput) avatarDataInput.value = base64Image;
                 };
                 reader.readAsDataURL(file);
             }

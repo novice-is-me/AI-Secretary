@@ -1,8 +1,337 @@
-{% extends "base.html" %}
+{% extends 'base_auth.html' %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Sanctuary | AI Secretary{% endblock %}
+
+{% block extra_head %}
+<style>
+  .home-shell {
+    min-height: 100vh;
+    background: #fbf9f4;
+    position: relative;
+    overflow: hidden;
+  }
+  .home-nav {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 40px;
+  }
+  .brand-mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #94a684;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(148, 166, 132, 0.25);
+  }
+  .hero-grid {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+    gap: 56px;
+    align-items: center;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 44px 40px 64px;
+  }
+  .eyebrow {
+    color: #536346;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin: 0 0 16px;
+  }
+  .hero-title {
+    color: #1b1c19;
+    font-size: 64px;
+    font-weight: 400;
+    line-height: 1.02;
+    margin: 0 0 20px;
+  }
+  .hero-copy {
+    color: #444840;
+    font-size: 19px;
+    line-height: 1.7;
+    max-width: 620px;
+    margin: 0 0 32px;
+  }
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 24px;
+    border-radius: 9999px;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.2s, background 0.2s, border-color 0.2s;
+  }
+  .btn-primary {
+    background: #536346;
+    color: white;
+    box-shadow: 0 8px 24px rgba(83, 99, 70, 0.24);
+  }
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.65);
+    color: #536346;
+    border: 1px solid rgba(197, 200, 189, 0.55);
+  }
+  .btn-primary:hover,
+  .btn-secondary:hover {
+    transform: translateY(-1px);
+  }
+  .demo-panel {
+    background: rgba(245, 243, 238, 0.86);
+    border: 1px solid rgba(197, 200, 189, 0.42);
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: 0 24px 70px rgba(83, 99, 70, 0.12);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+  .chat-line {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 18px;
+  }
+  .chat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #94a684;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .chat-bubble {
+    background: white;
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    padding: 14px 16px;
+    color: #444840;
+    font-size: 14px;
+    line-height: 1.55;
+    box-shadow: 0 2px 10px rgba(83, 99, 70, 0.05);
+  }
+  .task-card {
+    background: white;
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 10px;
+  }
+  .badge {
+    background: rgba(83, 99, 70, 0.1);
+    color: #536346;
+    border-radius: 9999px;
+    padding: 4px 10px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+  .info-band {
+    position: relative;
+    z-index: 2;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 40px 56px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .info-item {
+    background: rgba(255, 255, 255, 0.52);
+    border: 1px solid rgba(228, 226, 221, 0.7);
+    border-radius: 16px;
+    padding: 22px;
+  }
+  .info-item span {
+    color: #536346;
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  .info-item h3 {
+    color: #1b1c19;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 8px;
+  }
+  .info-item p {
+    color: #75786f;
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .soft-shape-one,
+  .soft-shape-two {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .soft-shape-one {
+    width: 360px;
+    height: 360px;
+    right: -120px;
+    top: 90px;
+    background: rgba(214, 233, 195, 0.45);
+    filter: blur(70px);
+  }
+  .soft-shape-two {
+    width: 280px;
+    height: 280px;
+    left: -100px;
+    bottom: 24px;
+    background: rgba(205, 226, 245, 0.42);
+    filter: blur(70px);
+  }
+  @media (max-width: 900px) {
+    .home-nav {
+      padding: 18px 22px;
+    }
+    .hero-grid {
+      grid-template-columns: 1fr;
+      gap: 32px;
+      padding: 32px 22px 40px;
+    }
+    .hero-title {
+      font-size: 44px;
+    }
+    .hero-copy {
+      font-size: 16px;
+    }
+    .demo-panel {
+      padding: 20px;
+      border-radius: 18px;
+    }
+    .info-band {
+      grid-template-columns: 1fr;
+      padding: 0 22px 40px;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-  <h1 class="text-2xl font-semibold mb-2">Welcome to AI Secretary</h1>
-  <p class="text-gray-500">Your intelligent daily planner.</p>
+<div class="home-shell">
+  <div class="soft-shape-one"></div>
+  <div class="soft-shape-two"></div>
+
+  <header class="home-nav">
+    <a href="{% url 'home' %}" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
+      <div class="brand-mark">
+        <span class="material-symbols-outlined" style="color:white; font-variation-settings:'FILL' 1;">spa</span>
+      </div>
+      <div>
+        <div style="font-size:22px; font-weight:700; color:#94A684; line-height:1.1;">Sanctuary</div>
+        <div style="font-size:10px; color:#75786f; letter-spacing:0.12em; text-transform:uppercase;">AI Secretary</div>
+      </div>
+    </a>
+
+    <nav style="display:flex; align-items:center; gap:10px;">
+      {% if request.user.is_authenticated %}
+        <a class="btn-secondary" href="{% url 'huddle' %}">Open Huddle</a>
+      {% else %}
+        <a class="btn-secondary" href="{% url 'login' %}">Sign In</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main class="hero-grid">
+    <section>
+      <p class="eyebrow">Hackathon MVP</p>
+      <h1 class="hero-title">Turn messy plans into a calm schedule.</h1>
+      <p class="hero-copy">
+        Sanctuary helps students and teams paste unstructured text or upload an image, then converts it into parsed tasks and a believable daily timeline.
+      </p>
+
+      <div class="cta-row">
+        {% if request.user.is_authenticated %}
+          <a class="btn-primary" href="{% url 'huddle' %}">
+            Start Planning
+            <span class="material-symbols-outlined" style="font-size:20px;">arrow_forward</span>
+          </a>
+          <a class="btn-secondary" href="{% url 'timeline' %}">View Timeline</a>
+        {% else %}
+          <a class="btn-primary" href="{% url 'login' %}">
+            Login
+            <span class="material-symbols-outlined" style="font-size:20px;">login</span>
+          </a>
+          <a class="btn-secondary" href="{% url 'register' %}">Create Account</a>
+        {% endif %}
+      </div>
+    </section>
+
+    <aside class="demo-panel" aria-label="Demo flow preview">
+      <div class="chat-line">
+        <div class="chat-icon">
+          <span class="material-symbols-outlined" style="font-size:18px; color:white; font-variation-settings:'FILL' 1;">spa</span>
+        </div>
+        <div class="chat-bubble">
+          Paste your tasks as they are. I will separate them, estimate priority, and build a schedule.
+        </div>
+      </div>
+
+      <div style="background:#536346; color:white; border-radius:18px; border-bottom-right-radius:4px; padding:16px 18px; margin:0 0 18px auto; max-width:86%; box-shadow:0 8px 24px rgba(83,99,70,0.18);">
+        <div style="font-size:15px; line-height:1.55;">Study Django tomorrow for 2 hours, Meeting at 3pm</div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span style="font-size:12px; font-weight:800; color:#536346; letter-spacing:0.14em; text-transform:uppercase;">Generated Tasks</span>
+        <span style="font-size:12px; color:#75786f;">Mock AI pipeline</span>
+      </div>
+
+      <div class="task-card">
+        <span class="badge">High</span>
+        <strong style="font-size:15px; color:#1b1c19; flex:1;">Study Django</strong>
+        <span style="font-size:12px; color:#75786f;">09:00</span>
+      </div>
+      <div class="task-card">
+        <span class="badge" style="background:rgba(205,226,245,0.55); color:#4d6171;">Medium</span>
+        <strong style="font-size:15px; color:#1b1c19; flex:1;">Meeting</strong>
+        <span style="font-size:12px; color:#75786f;">15:00</span>
+      </div>
+    </aside>
+  </main>
+
+  <section class="info-band">
+    <article class="info-item">
+      <span class="material-symbols-outlined">edit_note</span>
+      <h3>Messy Input</h3>
+      <p>Users type natural notes or upload an image. The app keeps the flow simple for a fast demo.</p>
+    </article>
+    <article class="info-item">
+      <span class="material-symbols-outlined">psychology</span>
+      <h3>Mock Parsing</h3>
+      <p>The backend extracts task names, durations, times, and priorities using demo-ready logic.</p>
+    </article>
+    <article class="info-item">
+      <span class="material-symbols-outlined">auto_stories</span>
+      <h3>Dynamic Timeline</h3>
+      <p>Generated tasks are stored in the session and rendered as an organized schedule.</p>
+    </article>
+  </section>
+</div>
 {% endblock %}
