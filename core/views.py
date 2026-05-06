@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
@@ -111,6 +112,7 @@ def timeline_view(request):
     profile = context['profile']
     schedule = profile.schedule or request.session.get('schedule', [])
     tasks = profile.parsed_tasks or request.session.get('parsed_tasks', [])
+    today = _normalize_schedule_date()
     
     time_range = ''
     if schedule:
@@ -121,6 +123,7 @@ def timeline_view(request):
         'tasks':    tasks,
         'has_data': bool(schedule),
         'time_range': time_range,
+        'today': today,
     })
     return render(request, 'timeline.html', context)
 
@@ -172,12 +175,12 @@ def profile_view(request):
 
 
 # ─────────────────────────────────────────────
-# MOCK AI PIPELINE
+# TASK PARSING AND SCHEDULING
 # ─────────────────────────────────────────────
 
 PRIORITY_KEYWORDS = {
-    'high':   ['urgent', 'asap', 'critical', 'deadline', 'due today', 'tomorrow', 'important', 'must', 'immediately'],
-    'medium': ['meeting', 'call', 'review', 'submit', 'send', 'prepare', 'finish', 'complete'],
+    'high':   ['urgent', 'asap', 'critical', 'deadline', 'due today', 'important', 'must', 'immediately', 'meeting', 'standup', 'appointment', 'interview'],
+    'medium': ['study', 'call', 'review', 'submit', 'send', 'prepare', 'finish', 'complete'],
     'low':    ['read', 'check', 'look into', 'maybe', 'consider', 'optional', 'sometime', 'whenever'],
 }
 
@@ -248,7 +251,7 @@ def _clean_task_title(text):
 def _split_task_clauses(raw_text):
     clauses = []
     for line in re.split(r'[\n\r;]+', raw_text.strip()):
-        for clause in re.split(r',\s+(?=[A-Z0-9])', line):
+        for clause in re.split(r',\s*', line):
             cleaned = re.sub(r'^[\s\-\*\•\d\.\)]+', '', clause).strip()
             if cleaned:
                 clauses.append(cleaned)
@@ -275,26 +278,63 @@ def _parse_raw_tasks(raw_text):
     return tasks
 
 
-def _generate_schedule(tasks, start_hour=9):
+def _normalize_schedule_date(value=None):
+    today = timezone.localdate()
+    if not value:
+        return today.isoformat()
+    try:
+        return datetime.strptime(str(value), '%Y-%m-%d').date().isoformat()
+    except (TypeError, ValueError):
+        return today.isoformat()
+
+
+def _task_schedule_date(task, fallback_date):
+    return _normalize_schedule_date(task.get('schedule_date') or task.get('date') or fallback_date)
+
+
+def _minutes(time_value):
+    hour, minute = [int(part) for part in time_value.split(':')]
+    return hour * 60 + minute
+
+
+def _time_label(total_minutes):
+    total_minutes = max(0, total_minutes)
+    return f'{total_minutes // 60:02d}:{total_minutes % 60:02d}'
+
+
+def _find_open_start(occupied, earliest, duration):
+    candidate = earliest
+    for start, end in sorted(occupied):
+        if candidate + duration <= start:
+            break
+        if candidate < end:
+            candidate = end + 10
+    return candidate
+
+
+def _generate_schedule(tasks, start_hour=9, schedule_date=None):
+    schedule_date = _normalize_schedule_date(schedule_date)
     order = {'high': 0, 'medium': 1, 'low': 2}
     sorted_tasks = sorted(
         tasks,
         key=lambda t: (
-            t.get('time') is not None,
+            t.get('time') is None,
+            t.get('time') or '',
             order.get(str(t.get('priority_key') or t.get('priority', 'medium')).lower(), 1),
         ),
     )
     schedule = []
-    current = datetime.today().replace(hour=start_hour, minute=0, second=0, microsecond=0)
+    occupied = []
+    current_minutes = max(0, min(23, start_hour)) * 60
 
     for task in sorted_tasks:
         priority_key = str(task.get('priority_key') or task.get('priority', 'medium')).lower()
-        if task.get('time'):
-            hour, minute = [int(part) for part in task['time'].split(':')]
-            current = current.replace(hour=hour, minute=minute)
-
         duration = int(task.get('duration_minutes') or task.get('duration') or 30)
-        end = current + timedelta(minutes=duration)
+        if task.get('time'):
+            start_minutes = _find_open_start(occupied, _minutes(task['time']), duration)
+        else:
+            start_minutes = _find_open_start(occupied, current_minutes, duration)
+        end_minutes = start_minutes + duration
         title = task.get('title') or task.get('task') or 'Untitled task'
         schedule.append({
             **task,
@@ -302,14 +342,58 @@ def _generate_schedule(tasks, start_hour=9):
             'task': title,
             'priority': priority_key.title(),
             'priority_key': priority_key,
-            'time': current.strftime('%H:%M'),
-            'start_time': current.strftime('%H:%M'),
-            'end_time':   end.strftime('%H:%M'),
+            'time': _time_label(start_minutes),
+            'start_time': _time_label(start_minutes),
+            'end_time': _time_label(end_minutes),
             'duration_minutes': duration,
             'duration': duration,
+            'schedule_date': schedule_date,
         })
-        current = end + timedelta(minutes=10)
-    return schedule
+        occupied.append((start_minutes, end_minutes))
+        if not task.get('time'):
+            current_minutes = end_minutes + 10
+    return sorted(schedule, key=lambda item: (item['schedule_date'], item['start_time']))
+
+
+def _task_title_key(task):
+    return str(task.get('title') or task.get('task') or '').strip().lower()
+
+
+def _merge_task_inputs(existing_tasks, incoming_tasks, schedule_date):
+    if incoming_tasks is None:
+        return list(existing_tasks or [])
+
+    merged = [dict(task) for task in (existing_tasks or [])]
+    existing_ids = {str(task.get('id')) for task in merged if task.get('id') is not None}
+    numeric_ids = [int(task_id) for task_id in existing_ids if task_id.isdigit()]
+    next_id = (max(numeric_ids) + 1) if numeric_ids else 1
+
+    for incoming in incoming_tasks:
+        incoming_date = _task_schedule_date(incoming, schedule_date)
+        incoming_key = _task_title_key(incoming)
+        match_index = None
+
+        for idx, existing in enumerate(merged):
+            if _task_schedule_date(existing, schedule_date) != incoming_date:
+                continue
+            if incoming_key and _task_title_key(existing) == incoming_key:
+                match_index = idx
+                break
+
+        normalized = {**incoming, 'schedule_date': incoming_date}
+        if match_index is not None:
+            normalized['id'] = merged[match_index].get('id') or normalized.get('id') or next_id
+            merged[match_index] = {**merged[match_index], **normalized}
+            existing_ids.add(str(normalized['id']))
+            continue
+
+        if normalized.get('id') is None or str(normalized.get('id')) in existing_ids:
+            normalized['id'] = next_id
+            next_id += 1
+        existing_ids.add(str(normalized['id']))
+        merged.append(normalized)
+
+    return merged
 
 
 def _api_success(data):
@@ -338,11 +422,9 @@ def parse_text(request):
     if not raw:
         return JsonResponse({**_api_error('No text provided.'), 'tasks': []}, status=400)
 
-    tasks = _parse_raw_tasks(raw)
+    schedule_date = _normalize_schedule_date(body.get('schedule_date') if 'body' in locals() else request.POST.get('schedule_date'))
+    tasks = [{**task, 'schedule_date': schedule_date} for task in _parse_raw_tasks(raw)]
     request.session['parsed_tasks'] = tasks
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    profile.parsed_tasks = tasks
-    profile.save(update_fields=['parsed_tasks'])
     return JsonResponse({**_api_success({'tasks': tasks}), 'tasks': tasks})
 
 
@@ -355,11 +437,9 @@ def upload_image(request):
         return JsonResponse({**_api_error('No image uploaded.'), 'tasks': []}, status=400)
 
     extracted = _ocr_extract(image_file)
-    tasks = _parse_raw_tasks(extracted)
+    schedule_date = _normalize_schedule_date(request.POST.get('schedule_date'))
+    tasks = [{**task, 'schedule_date': schedule_date} for task in _parse_raw_tasks(extracted)]
     request.session['parsed_tasks'] = tasks
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    profile.parsed_tasks = tasks
-    profile.save(update_fields=['parsed_tasks'])
     return JsonResponse({
         **_api_success({'extracted_text': extracted, 'tasks': tasks}),
         'extracted_text': extracted,
@@ -389,20 +469,65 @@ def generate_schedule(request):
     try:
         body       = json.loads(request.body)
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        tasks      = body.get('tasks') or request.session.get('parsed_tasks', []) or profile.parsed_tasks
         start_hour = int(body.get('start_hour', 9))
+        schedule_date = _normalize_schedule_date(body.get('schedule_date'))
+        reshuffle = bool(body.get('reshuffle'))
+        stored_tasks = profile.parsed_tasks or request.session.get('parsed_tasks', [])
+        tasks = _merge_task_inputs(stored_tasks, body.get('tasks'), schedule_date)
     except (json.JSONDecodeError, AttributeError, ValueError):
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
         tasks      = request.session.get('parsed_tasks', []) or profile.parsed_tasks
         start_hour = 9
+        schedule_date = _normalize_schedule_date()
+        reshuffle = False
 
     if not tasks:
         return JsonResponse({**_api_error('No tasks to schedule.'), 'schedule': []}, status=400)
 
-    schedule = _generate_schedule(tasks, start_hour=start_hour)
+    normalized_tasks = []
+    for i, task in enumerate(tasks):
+        task_date = _task_schedule_date(task, schedule_date)
+        normalized = {**task, 'id': task.get('id') or i + 1, 'schedule_date': task_date}
+        if reshuffle and task_date == schedule_date:
+            normalized['time'] = None
+        normalized_tasks.append(normalized)
+
+    selected_tasks = [task for task in normalized_tasks if _task_schedule_date(task, schedule_date) == schedule_date]
+    if not selected_tasks:
+        return JsonResponse({**_api_error('No tasks for this date.'), 'schedule': []}, status=400)
+
+    day_schedule = _generate_schedule(selected_tasks, start_hour=start_hour, schedule_date=schedule_date)
+    scheduled_by_id = {
+        str(item.get('id')): item
+        for item in day_schedule
+        if item.get('id') is not None
+    }
+    scheduled_by_title = {
+        item.get('title') or item.get('task'): item
+        for item in day_schedule
+    }
+    normalized_tasks = [
+        {
+            **task,
+            **({
+                'time': scheduled['start_time'],
+                'start_time': scheduled['start_time'],
+                'end_time': scheduled['end_time'],
+            } if (scheduled := (
+                scheduled_by_id.get(str(task.get('id')))
+                or scheduled_by_title.get(task.get('title') or task.get('task'))
+            )) and _task_schedule_date(task, schedule_date) == schedule_date else {}),
+        }
+        for task in normalized_tasks
+    ]
+    preserved_schedule = [
+        item for item in (profile.schedule or request.session.get('schedule', []))
+        if _task_schedule_date(item, schedule_date) != schedule_date
+    ]
+    schedule = sorted(preserved_schedule + day_schedule, key=lambda item: (item.get('schedule_date', schedule_date), item.get('start_time', '00:00')))
     request.session['schedule'] = schedule
-    request.session['parsed_tasks'] = tasks
-    profile.parsed_tasks = tasks
+    request.session['parsed_tasks'] = normalized_tasks
+    profile.parsed_tasks = normalized_tasks
     profile.schedule = schedule
     profile.save(update_fields=['parsed_tasks', 'schedule'])
     return JsonResponse({
@@ -410,3 +535,30 @@ def generate_schedule(request):
         'schedule': schedule,
         'redirect': '/timeline/',
     })
+
+
+@login_required
+@require_POST
+def delete_task(request):
+    try:
+        body = json.loads(request.body)
+        task_id = body.get('id')
+        title = body.get('title') or body.get('task')
+        schedule_date = _normalize_schedule_date(body.get('schedule_date'))
+    except (json.JSONDecodeError, AttributeError):
+        return JsonResponse(_api_error('Invalid request.'), status=400)
+
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+    def matches(item):
+        same_date = _task_schedule_date(item, schedule_date) == schedule_date
+        same_id = task_id is not None and str(item.get('id')) == str(task_id)
+        same_title = title and (item.get('title') == title or item.get('task') == title)
+        return same_date and (same_id or same_title)
+
+    profile.parsed_tasks = [task for task in (profile.parsed_tasks or []) if not matches(task)]
+    profile.schedule = [item for item in (profile.schedule or []) if not matches(item)]
+    profile.save(update_fields=['parsed_tasks', 'schedule'])
+    request.session['parsed_tasks'] = profile.parsed_tasks
+    request.session['schedule'] = profile.schedule
+    return JsonResponse({**_api_success({'tasks': profile.parsed_tasks, 'schedule': profile.schedule}), 'tasks': profile.parsed_tasks, 'schedule': profile.schedule})

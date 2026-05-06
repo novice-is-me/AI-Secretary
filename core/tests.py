@@ -1,8 +1,10 @@
 import json
+from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from .models import UserProfile
 
@@ -23,7 +25,8 @@ class AuthFlowTests(TestCase):
 
         response = self.client.post(reverse('logout'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "localStorage.removeItem('sanctuary_huddle_messages')")
+        self.assertNotContains(response, "localStorage.removeItem('sanctuary_huddle_messages')")
+        self.assertContains(response, "localStorage.setItem('sanctuary_huddle_history_visible', 'false')")
         self.assertContains(response, reverse('home'))
 
     def test_login_email_is_case_insensitive(self):
@@ -79,12 +82,13 @@ class MockAIPipelineTests(TestCase):
         first = payload['data']['tasks'][0]
         self.assertEqual(first['task'], 'Study Django')
         self.assertEqual(first['duration'], 120)
-        self.assertEqual(first['priority'], 'High')
-        self.assertEqual(first['priority_key'], 'high')
+        self.assertEqual(first['priority'], 'Medium')
+        self.assertEqual(first['priority_key'], 'medium')
 
         second = payload['data']['tasks'][1]
         self.assertEqual(second['task'], 'Meeting')
         self.assertEqual(second['time'], '15:00')
+        self.assertEqual(second['priority_key'], 'high')
 
         third = payload['data']['tasks'][2]
         self.assertEqual(third['task'], 'Read docs')
@@ -128,6 +132,149 @@ class MockAIPipelineTests(TestCase):
         self.assertEqual(len(self.user.profile.parsed_tasks), 2)
         self.assertEqual(len(self.user.profile.schedule), 2)
         self.assertEqual(self.user.profile.schedule[0]['task'], 'Study Django')
+
+    def test_comma_separated_lowercase_tasks_are_split(self):
+        response = self.client.post(
+            reverse('parse_text'),
+            data=json.dumps({'text': 'study django for 30 minutes, meeting at 3pm, read docs'}),
+            content_type='application/json',
+        )
+
+        tasks = response.json()['data']['tasks']
+        self.assertEqual([task['task'] for task in tasks], ['study django', 'meeting', 'read docs'])
+        self.assertEqual(tasks[0]['priority_key'], 'medium')
+        self.assertEqual(tasks[1]['priority_key'], 'high')
+
+    def test_schedule_dates_are_preserved_separately(self):
+        today = timezone.localdate().isoformat()
+        tomorrow = (timezone.localdate() + timedelta(days=1)).isoformat()
+
+        first = self.client.post(
+            reverse('generate_schedule'),
+            data=json.dumps({
+                'schedule_date': today,
+                'tasks': [{'id': 1, 'title': 'Today task', 'task': 'Today task', 'duration': 30, 'priority_key': 'medium', 'schedule_date': today}],
+            }),
+            content_type='application/json',
+        )
+        self.assertEqual(first.status_code, 200)
+
+        second = self.client.post(
+            reverse('generate_schedule'),
+            data=json.dumps({
+                'schedule_date': tomorrow,
+                'tasks': [
+                    {'id': 1, 'title': 'Today task', 'task': 'Today task', 'duration': 30, 'priority_key': 'medium', 'schedule_date': today},
+                    {'id': 2, 'title': 'Tomorrow task', 'task': 'Tomorrow task', 'duration': 30, 'priority_key': 'medium', 'schedule_date': tomorrow},
+                ],
+            }),
+            content_type='application/json',
+        )
+
+        schedule = second.json()['schedule']
+        self.assertEqual({item['schedule_date'] for item in schedule}, {today, tomorrow})
+
+    def test_auto_task_uses_next_open_slot_without_overwriting_existing_schedule(self):
+        today = timezone.localdate().isoformat()
+        first_tasks = [
+            {'id': 1, 'title': 'First auto', 'task': 'First auto', 'duration': 30, 'priority_key': 'medium', 'schedule_date': today},
+        ]
+        self.client.post(
+            reverse('generate_schedule'),
+            data=json.dumps({'schedule_date': today, 'tasks': first_tasks}),
+            content_type='application/json',
+        )
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.parsed_tasks[0]['time'], '09:00')
+
+        second_tasks = self.user.profile.parsed_tasks + [
+            {'id': 2, 'title': 'Second auto', 'task': 'Second auto', 'duration': 30, 'priority_key': 'medium', 'time': None, 'schedule_date': today},
+        ]
+        response = self.client.post(
+            reverse('generate_schedule'),
+            data=json.dumps({'schedule_date': today, 'tasks': second_tasks}),
+            content_type='application/json',
+        )
+
+        schedule = response.json()['schedule']
+        first = next(item for item in schedule if item['task'] == 'First auto')
+        second = next(item for item in schedule if item['task'] == 'Second auto')
+        self.assertEqual(first['start_time'], '09:00')
+        self.assertEqual(second['start_time'], '09:40')
+
+    def test_huddle_parse_then_generate_appends_auto_task_to_existing_day(self):
+        today = timezone.localdate().isoformat()
+        self.client.post(
+            reverse('parse_text'),
+            data=json.dumps({'text': 'First auto for 30 minutes', 'schedule_date': today}),
+            content_type='application/json',
+        )
+        self.client.post(
+            reverse('generate_schedule'),
+            data=json.dumps({
+                'schedule_date': today,
+                'tasks': [{'id': 1, 'title': 'First auto', 'task': 'First auto', 'duration': 30, 'priority_key': 'medium', 'schedule_date': today}],
+            }),
+            content_type='application/json',
+        )
+
+        self.client.post(
+            reverse('parse_text'),
+            data=json.dumps({'text': 'Second auto for 30 minutes', 'schedule_date': today}),
+            content_type='application/json',
+        )
+        response = self.client.post(
+            reverse('generate_schedule'),
+            data=json.dumps({
+                'schedule_date': today,
+                'tasks': [{'id': 1, 'title': 'Second auto', 'task': 'Second auto', 'duration': 30, 'priority_key': 'medium', 'schedule_date': today}],
+            }),
+            content_type='application/json',
+        )
+
+        schedule = response.json()['schedule']
+        first = next(item for item in schedule if item['task'] == 'First auto')
+        second = next(item for item in schedule if item['task'] == 'Second auto')
+        self.assertEqual(first['start_time'], '09:00')
+        self.assertEqual(second['start_time'], '09:40')
+
+    def test_reshuffle_clears_selected_day_pinned_times_only(self):
+        today = timezone.localdate().isoformat()
+        tomorrow = (timezone.localdate() + timedelta(days=1)).isoformat()
+        tasks = [
+            {'id': 1, 'title': 'Today pinned', 'task': 'Today pinned', 'duration': 30, 'priority_key': 'medium', 'time': '15:00', 'schedule_date': today},
+            {'id': 2, 'title': 'Tomorrow pinned', 'task': 'Tomorrow pinned', 'duration': 30, 'priority_key': 'medium', 'time': '16:00', 'schedule_date': tomorrow},
+        ]
+        self.client.post(reverse('generate_schedule'), data=json.dumps({'tasks': tasks, 'schedule_date': today}), content_type='application/json')
+        self.client.post(reverse('generate_schedule'), data=json.dumps({'tasks': tasks, 'schedule_date': tomorrow}), content_type='application/json')
+
+        response = self.client.post(
+            reverse('generate_schedule'),
+            data=json.dumps({'tasks': tasks, 'schedule_date': today, 'reshuffle': True}),
+            content_type='application/json',
+        )
+
+        schedule = response.json()['schedule']
+        today_item = next(item for item in schedule if item['task'] == 'Today pinned')
+        tomorrow_item = next(item for item in schedule if item['task'] == 'Tomorrow pinned')
+        self.assertEqual(today_item['start_time'], '09:00')
+        self.assertEqual(tomorrow_item['start_time'], '16:00')
+
+    def test_delete_task_removes_task_and_schedule_item_for_date(self):
+        today = timezone.localdate().isoformat()
+        tasks = [{'id': 1, 'title': 'Delete me', 'task': 'Delete me', 'duration': 30, 'priority_key': 'medium', 'schedule_date': today}]
+        self.client.post(reverse('generate_schedule'), data=json.dumps({'tasks': tasks, 'schedule_date': today}), content_type='application/json')
+
+        response = self.client.post(
+            reverse('delete_task'),
+            data=json.dumps({'id': 1, 'title': 'Delete me', 'schedule_date': today}),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.parsed_tasks, [])
+        self.assertEqual(self.user.profile.schedule, [])
 
     def test_huddle_and_timeline_render_logged_in_user_name(self):
         self.user.first_name = 'Demo'
