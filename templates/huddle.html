@@ -241,11 +241,16 @@
 
 <script>
 const STORAGE_KEY = 'sanctuary_huddle_messages';
+const PROFILE_IMAGE_URL = '{{ profile_image_url|escapejs }}';
+let showHistory = false;
 
 // ── Helpers ──────────────────────────────────────────
-function getMessages() {
+function getStoredMessages() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
     catch { return []; }
+}
+function getMessages() {
+    return showHistory ? getStoredMessages() : [];
 }
 function saveMessages(msgs) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
@@ -259,6 +264,9 @@ function escapeHtml(str) {
 function scrollToBottom() {
     document.querySelectorAll('.no-scrollbar').forEach(el => { el.scrollTop = el.scrollHeight; });
 }
+function avatarMarkup() {
+    return `<img src="${PROFILE_IMAGE_URL}" alt="{{ display_name|escapejs }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-top:4px;" />`;
+}
 
 // ── Bubble builders ───────────────────────────────────
 function createTextBubble(text, time) {
@@ -266,9 +274,7 @@ function createTextBubble(text, time) {
     w.className = 'user-msg-bubble';
     w.style.cssText = 'display:flex;flex-direction:row-reverse;gap:12px;max-width:85%;margin-left:auto;margin-top:12px;';
     w.innerHTML = `
-        <div style="width:32px;height:32px;border-radius:50%;background:#94a684;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:4px;">
-            <span class="material-symbols-outlined" style="font-size:16px;color:white;">person</span>
-        </div>
+        ${avatarMarkup()}
         <div style="background:#536346;color:white;padding:14px 16px;border-radius:16px;border-bottom-right-radius:4px;box-shadow:0 2px 8px rgba(83,99,70,0.2);">
             <p style="font-size:15px;margin:0 0 4px;line-height:1.55;white-space:pre-wrap;">${escapeHtml(text)}</p>
             <span style="font-size:10px;opacity:0.65;display:block;text-align:right;">${time}</span>
@@ -281,9 +287,7 @@ function createImageBubble(dataUrl, time) {
     w.className = 'user-msg-bubble';
     w.style.cssText = 'display:flex;flex-direction:row-reverse;gap:12px;max-width:85%;margin-left:auto;margin-top:12px;';
     w.innerHTML = `
-        <div style="width:32px;height:32px;border-radius:50%;background:#94a684;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:4px;">
-            <span class="material-symbols-outlined" style="font-size:16px;color:white;">person</span>
-        </div>
+        ${avatarMarkup()}
         <div style="background:#536346;padding:8px;border-radius:16px;border-bottom-right-radius:4px;box-shadow:0 2px 8px rgba(83,99,70,0.2);">
             <img src="${dataUrl}" alt="Sent image" style="max-width:220px;max-height:200px;width:100%;border-radius:10px;display:block;object-fit:cover;" />
             <span style="font-size:10px;color:rgba(255,255,255,0.65);display:block;text-align:right;margin-top:4px;">${time}</span>
@@ -294,13 +298,23 @@ function createImageBubble(dataUrl, time) {
 // ── Render all messages ───────────────────────────────
 function renderMessages() {
     const msgs = getMessages();
+    const storedCount = getStoredMessages().length;
     const feeds = [
         document.getElementById('mobile-chat-feed'),
         document.getElementById('desktop-chat-feed')
     ];
     feeds.forEach(container => {
         if (!container) return;
-        container.querySelectorAll('.user-msg-bubble').forEach(el => el.remove());
+        container.querySelectorAll('.user-msg-bubble,.history-access').forEach(el => el.remove());
+        if (!showHistory && storedCount) {
+            const history = document.createElement('button');
+            history.className = 'history-access';
+            history.type = 'button';
+            history.style.cssText = 'align-self:center;display:flex;align-items:center;gap:8px;border:1px solid rgba(148,166,132,0.35);background:#f5f3ee;color:#536346;border-radius:9999px;padding:9px 14px;font-size:12px;font-weight:700;font-family:"Plus Jakarta Sans",sans-serif;cursor:pointer;margin:6px auto 10px;';
+            history.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px;">history</span> View previous chat (${storedCount})`;
+            history.addEventListener('click', () => { showHistory = true; renderMessages(); });
+            container.appendChild(history);
+        }
         msgs.forEach(msg => {
             const el = msg.type === 'image'
                 ? createImageBubble(msg.dataUrl, msg.time)
@@ -313,16 +327,17 @@ function renderMessages() {
 
     // Hide/show "Waiting for your lead..." hint on desktop
     const hint = document.getElementById('desktop-waiting-hint');
-    if (hint) hint.style.display = msgs.length > 0 ? 'none' : 'flex';
+    if (hint) hint.style.display = msgs.length > 0 || storedCount > 0 ? 'none' : 'flex';
 }
 
 // ── Send text ─────────────────────────────────────────
 function sendMessage(inputEl) {
     const text = inputEl.value.trim();
     if (!text) return;
-    const msgs = getMessages();
+    const msgs = getStoredMessages();
     msgs.push({ type: 'text', text, time: timeLabel() });
     saveMessages(msgs);
+    showHistory = true;
     inputEl.value = '';
     renderMessages();
     scrollToBottom();
@@ -330,9 +345,10 @@ function sendMessage(inputEl) {
 
 // ── Send image ────────────────────────────────────────
 function sendImage(dataUrl) {
-    const msgs = getMessages();
+    const msgs = getStoredMessages();
     msgs.push({ type: 'image', dataUrl, time: timeLabel() });
     saveMessages(msgs);
+    showHistory = true;
     renderMessages();
     scrollToBottom();
 }
@@ -519,6 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let currentTasks = [];
+    let currentScheduleDate = new Date().toISOString().slice(0, 10);
 
     // ── Task preview panel ────────────────────────────────────────────────
     function ensureTaskPreview() {
@@ -529,7 +546,10 @@ document.addEventListener('DOMContentLoaded', () => {
         panel.innerHTML = `
             <div style="background:#f5f3ee; border-radius:16px; padding:20px 24px; margin-bottom:8px; border:1px solid rgba(197,200,189,0.3);">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-                    <span style="font-size:12px; font-weight:700; letter-spacing:0.12em; color:#536346; text-transform:uppercase;">Tasks parsed</span>
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <span style="font-size:12px; font-weight:700; letter-spacing:0.12em; color:#536346; text-transform:uppercase;">Tasks parsed</span>
+                        <input id="secretary-schedule-date" type="date" value="${currentScheduleDate}" min="${new Date().toISOString().slice(0, 10)}" title="Choose which day to plan" style="border:1px solid rgba(197,200,189,0.55); background:white; color:#1b1c19; border-radius:9999px; padding:7px 12px; font-size:12px; font-family:'Plus Jakarta Sans',sans-serif;" />
+                    </div>
                     <div style="display:flex; align-items:center; gap:8px;">
                         <button id="secretary-schedule-btn" style="background:#536346; color:white; border:none; border-radius:9999px; padding:6px 16px; font-size:12px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif;">
                             Generate schedule →
@@ -546,6 +566,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputBar = document.querySelector('.desktop-input');
         if (inputBar) inputBar.parentNode.insertBefore(panel, inputBar);
 
+        document.getElementById('secretary-schedule-date').addEventListener('change', e => {
+            currentScheduleDate = e.target.value || new Date().toISOString().slice(0, 10);
+            currentTasks = currentTasks.map(task => ({ ...task, schedule_date: currentScheduleDate }));
+        });
         document.getElementById('secretary-schedule-btn').addEventListener('click', generateSchedule);
         document.getElementById('secretary-close-btn').addEventListener('click', () => {
             panel.style.display = 'none';
@@ -628,7 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function parseAndSend(text) {
         ensureTaskPreview();
         try {
-            const data = await postJSON('/parse-text/', { text });
+            const data = await postJSON('/parse-text/', { text, schedule_date: currentScheduleDate });
             const tasks = data.data?.tasks || data.tasks || [];
             if (tasks.length) {
                 showTaskPreview(tasks);
@@ -645,7 +669,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function generateSchedule() {
         setStatus('Building your schedule…');
         try {
-            const data = await postJSON('/generate-schedule/', { tasks: currentTasks });
+            const datedTasks = currentTasks.map(task => ({ ...task, schedule_date: task.schedule_date || currentScheduleDate }));
+            const data = await postJSON('/generate-schedule/', { tasks: datedTasks, schedule_date: currentScheduleDate });
             const schedule = data.data?.schedule || data.schedule || [];
             if (schedule.length) {
                 window.location.href = '/timeline/';
@@ -662,6 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ensureTaskPreview();
         const fd = new FormData();
         fd.append('image', file);
+        fd.append('schedule_date', currentScheduleDate);
         try {
             const res = await fetch('/upload-image/', {
                 method: 'POST',

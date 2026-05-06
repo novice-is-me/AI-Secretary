@@ -113,12 +113,21 @@
         {% endif %}
       </p>
     </div>
-    <!-- List / Calendar toggle -->
-    <div style="display:flex; background:#eae8e3; border-radius:9999px; padding:4px; gap:4px;">
-      <button id="tl-list-btn" onclick="switchView('list')" style="background:white; color:#536346; padding:8px 20px; border-radius:9999px; border:none; font-size:14px; font-weight:500; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.08); transition:all 0.2s;">List</button>
-      <button id="tl-cal-btn" onclick="switchView('calendar')" style="background:transparent; color:#75786f; padding:8px 20px; border-radius:9999px; border:none; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:all 0.2s;">
-        <span class="material-symbols-outlined" style="font-size:18px; vertical-align:middle;">calendar_today</span>
+    <!-- Date tools + List / Calendar toggle -->
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+      <input id="tl-schedule-date" type="date" value="{{ today }}" min="{{ today }}" title="Choose which day to plan" style="padding:9px 12px; border:1px solid rgba(197,200,189,0.65); border-radius:9999px; background:white; color:#1b1c19; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; outline:none;" />
+      {% if has_data %}
+      <button onclick="reshuffleSchedule()" style="display:flex; align-items:center; gap:6px; background:#536346; color:white; padding:9px 16px; border-radius:9999px; border:none; font-size:13px; font-weight:600; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+        <span class="material-symbols-outlined" style="font-size:18px;">shuffle</span>
+        Re-shuffle
       </button>
+      {% endif %}
+      <div style="display:flex; background:#eae8e3; border-radius:9999px; padding:4px; gap:4px;">
+        <button id="tl-list-btn" onclick="switchView('list')" style="background:white; color:#536346; padding:8px 20px; border-radius:9999px; border:none; font-size:14px; font-weight:500; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.08); transition:all 0.2s;">List</button>
+        <button id="tl-cal-btn" onclick="switchView('calendar')" style="background:transparent; color:#75786f; padding:8px 20px; border-radius:9999px; border:none; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:all 0.2s;">
+          <span class="material-symbols-outlined" style="font-size:18px; vertical-align:middle;">calendar_today</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -140,6 +149,12 @@
       {% else %}
       <!-- ── Dynamic schedule items ── -->
       {% for item in schedule %}
+        {% ifchanged item.schedule_date %}
+          <div style="display:flex; align-items:center; gap:12px; margin:8px 0 -8px;">
+            <span style="font-size:12px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:#536346;">{{ item.schedule_date|default:today }}</span>
+            <div style="height:1px; flex:1; background:rgba(148,166,132,0.22);"></div>
+          </div>
+        {% endifchanged %}
  
         {% if item.priority_key == 'high' %}
           {% comment %} High priority — dark green accent card {% endcomment %}
@@ -154,7 +169,10 @@
                 <span style="background:#536346; color:white; font-size:10px; padding:4px 10px; border-radius:9999px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;">Priority</span>
               </div>
               <h3 style="font-size:24px; font-weight:400; color:#2c3b21; margin:0 0 6px;">{{ item.title }}</h3>
-              <p style="font-size:14px; color:#536346; margin:0;">{{ item.duration_minutes }} min block</p>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                <p style="font-size:14px; color:#536346; margin:0;">{{ item.duration_minutes }} min block</p>
+                <button onclick="deleteTask('{{ item.id }}', '{{ item.title|escapejs }}', '{{ item.schedule_date|default:today }}')" title="Remove task" style="width:30px; height:30px; border-radius:50%; border:none; background:rgba(83,99,70,0.1); color:#536346; cursor:pointer; display:flex; align-items:center; justify-content:center;"><span class="material-symbols-outlined" style="font-size:17px;">delete</span></button>
+              </div>
             </div>
           </div>
  
@@ -171,7 +189,10 @@
                 <span style="background:#cde2f5; color:#516575; font-size:10px; padding:4px 10px; border-radius:9999px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;">Focus</span>
               </div>
               <h3 style="font-size:24px; font-weight:400; color:#1b1c19; margin:0 0 6px;">{{ item.title }}</h3>
-              <p style="font-size:14px; color:#75786f; margin:0;">{{ item.duration_minutes }} min block</p>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                <p style="font-size:14px; color:#75786f; margin:0;">{{ item.duration_minutes }} min block</p>
+                <button onclick="deleteTask('{{ item.id }}', '{{ item.title|escapejs }}', '{{ item.schedule_date|default:today }}')" title="Remove task" style="width:30px; height:30px; border-radius:50%; border:none; background:rgba(117,120,111,0.1); color:#75786f; cursor:pointer; display:flex; align-items:center; justify-content:center;"><span class="material-symbols-outlined" style="font-size:17px;">delete</span></button>
+              </div>
             </div>
           </div>
  
@@ -187,7 +208,10 @@
                 <span style="font-size:12px; color:#75786f; font-weight:500; letter-spacing:0.05em;">{{ item.start_time }} — {{ item.end_time }}</span>
               </div>
               <h3 style="font-size:24px; font-weight:400; color:#1b1c19; margin:0 0 6px;">{{ item.title }}</h3>
-              <p style="font-size:14px; color:#75786f; margin:0;">{{ item.duration_minutes }} min block</p>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                <p style="font-size:14px; color:#75786f; margin:0;">{{ item.duration_minutes }} min block</p>
+                <button onclick="deleteTask('{{ item.id }}', '{{ item.title|escapejs }}', '{{ item.schedule_date|default:today }}')" title="Remove task" style="width:30px; height:30px; border-radius:50%; border:none; background:rgba(117,120,111,0.1); color:#75786f; cursor:pointer; display:flex; align-items:center; justify-content:center;"><span class="material-symbols-outlined" style="font-size:17px;">delete</span></button>
+              </div>
             </div>
           </div>
         {% endif %}
@@ -256,9 +280,15 @@
       </div>
     </div>
     <!-- Time (optional) -->
-    <div style="margin-bottom:24px;">
+    <div style="display:flex; gap:12px; margin-bottom:24px;">
+      <div style="flex:1;">
+        <label style="font-size:12px; font-weight:600; color:#536346; letter-spacing:0.08em; text-transform:uppercase; display:block; margin-bottom:6px;">Date</label>
+        <input id="at-date" type="date" value="{{ today }}" min="{{ today }}" style="width:100%; padding:12px 16px; border:1px solid rgba(197,200,189,0.6); border-radius:12px; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif; color:#1b1c19; background:#fafaf8; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#94a684'" onblur="this.style.borderColor='rgba(197,200,189,0.6)'" />
+      </div>
+      <div style="flex:1;">
       <label style="font-size:12px; font-weight:600; color:#536346; letter-spacing:0.08em; text-transform:uppercase; display:block; margin-bottom:6px;">Start Time <span style="font-weight:400; text-transform:none; letter-spacing:0; color:#75786f;">(optional)</span></label>
       <input id="at-time" type="time" style="width:100%; padding:12px 16px; border:1px solid rgba(197,200,189,0.6); border-radius:12px; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif; color:#1b1c19; background:#fafaf8; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#94a684'" onblur="this.style.borderColor='rgba(197,200,189,0.6)'" />
+      </div>
     </div>
     <div id="at-error" style="display:none; font-size:13px; color:#b91c1c; margin-bottom:12px; font-style:italic;"></div>
     <div style="display:flex; gap:10px; justify-content:flex-end;">
@@ -321,10 +351,15 @@ function switchView(v) {
 
 // ── Add Task Modal ────────────────────────────────────────
 const existingTasks = {{ tasks|safe }};
+const today = '{{ today }}';
 
 function getCsrf() {
   const m = document.cookie.match(/csrftoken=([^;]+)/);
   return m ? m[1] : '';
+}
+
+function selectedScheduleDate() {
+  return document.getElementById('tl-schedule-date')?.value || today;
 }
 
 function openAddTaskModal() {
@@ -333,6 +368,7 @@ function openAddTaskModal() {
   document.getElementById('at-title').value = '';
   document.getElementById('at-priority').value = 'medium';
   document.getElementById('at-duration').value = '30';
+  document.getElementById('at-date').value = selectedScheduleDate();
   document.getElementById('at-time').value = '';
   document.getElementById('at-error').style.display = 'none';
   const btn = document.getElementById('at-submit-btn');
@@ -359,6 +395,7 @@ async function submitAddTask() {
   const title    = document.getElementById('at-title').value.trim();
   const priority = document.getElementById('at-priority').value;
   const duration = Math.max(5, parseInt(document.getElementById('at-duration').value) || 30);
+  const scheduleDate = document.getElementById('at-date').value || selectedScheduleDate();
   const time     = document.getElementById('at-time').value || null;
   const errEl    = document.getElementById('at-error');
 
@@ -378,6 +415,7 @@ async function submitAddTask() {
     duration_minutes: duration,
     duration,
     time,
+    schedule_date:    scheduleDate,
   };
 
   const btn = document.getElementById('at-submit-btn');
@@ -388,7 +426,7 @@ async function submitAddTask() {
     const res = await fetch('/generate-schedule/', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
-      body:    JSON.stringify({ tasks: [...existingTasks, newTask] }),
+      body:    JSON.stringify({ tasks: [...existingTasks, newTask], schedule_date: scheduleDate }),
     });
     const data = await res.json();
     if (data.schedule && data.schedule.length) {
@@ -404,6 +442,34 @@ async function submitAddTask() {
     errEl.style.display = 'block';
     btn.textContent = 'Add to Schedule';
     btn.disabled = false;
+  }
+}
+
+async function reshuffleSchedule() {
+  try {
+    const res = await fetch('/generate-schedule/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+      body: JSON.stringify({ tasks: existingTasks, schedule_date: selectedScheduleDate(), reshuffle: true }),
+    });
+    const data = await res.json();
+    if (data.schedule && data.schedule.length) window.location.reload();
+  } catch (e) {
+    console.error('Failed to reshuffle schedule', e);
+  }
+}
+
+async function deleteTask(id, title, scheduleDate) {
+  try {
+    const res = await fetch('/delete-task/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+      body: JSON.stringify({ id, title, schedule_date: scheduleDate || selectedScheduleDate() }),
+    });
+    const data = await res.json();
+    if (data.success) window.location.reload();
+  } catch (e) {
+    console.error('Failed to delete task', e);
   }
 }
 </script>
