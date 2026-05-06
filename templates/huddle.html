@@ -435,7 +435,7 @@ function initInputs() {
             input.style.height = Math.min(input.scrollHeight, 120) + 'px';
         });
         input.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); sendMessage(input); }
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
         });
     });
     const desktopBtn = document.querySelector('.desktop-input .huddle-send-btn');
