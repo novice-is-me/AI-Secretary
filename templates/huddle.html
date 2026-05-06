@@ -52,9 +52,9 @@
         </div>
         <!-- User card -->
         <a href="{% url 'profile' %}" style="display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px; background:#f0eee9; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='#e4e2dd'" onmouseout="this.style.background='#f0eee9'">
-            <img id="huddleSidebarProfileImg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtU65XRpdKQg_XJVvRjopMcSs9dgj_-xwI5aHUBWXF1XR8qhD3_DHBttscPhNh-cD2aICNWbG6dhMpNyDsmBX8rpk1II2D9dRag00c3OX-vQdlOk-77QzSNUiniJ8L0QL8dhZ-9WcFR8_1vu7nSP5EKZuUZlbzHg1FzhQ3DhRX9X5u3FJ-VxgInZs2_c7fUG1Ljt_oYmZePWG4Vmuv_ixb-rzgBINgX1_XrX_Nytepv6Ce2DYB1Q3lUB1_edkrCIm6wfsq7g2h-3h4" alt="User" style="width:32px; height:32px; border-radius:50%; object-fit:cover;"/>
+            <img id="huddleSidebarProfileImg" src="{{ profile_image_url }}" alt="{{ display_name }}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;"/>
             <div>
-                <div style="font-size:14px; font-weight:600; color:#1b1c19;">Alex Rivera</div>
+                <div style="font-size:14px; font-weight:600; color:#1b1c19;">{{ display_name }}</div>
                 <div style="font-size:10px; color:#75786f;">Pro Member</div>
             </div>
         </a>
@@ -226,7 +226,7 @@
                         </button>
                     </div>
                 </div>
-                <input id="desktop-input" class="huddle-input" type="text" placeholder="What's on your mind?" style="flex:1; background:transparent; border:none; outline:none; font-size:16px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; padding:4px 8px;" />
+                <textarea id="desktop-input" class="huddle-input" rows="1" placeholder="What's on your mind?" style="flex:1; background:transparent; border:none; outline:none; font-size:16px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; padding:8px; min-height:24px; max-height:120px; resize:none; line-height:1.45;"></textarea>
                 <div style="padding-right:8px;">
                     <button class="huddle-send-btn" style="width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#536346; border:none; color:white; cursor:pointer; box-shadow:0 4px 12px rgba(83,99,70,0.3); transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         <span class="material-symbols-outlined">arrow_forward</span>
@@ -257,7 +257,7 @@
                     </button>
                 </div>
             </div>
-            <input id="mobile-input" class="huddle-input" type="text" placeholder="Tell me what's on your mind..." style="flex:1; background:transparent; border:none; outline:none; font-size:15px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; padding:10px 0;" />
+            <textarea id="mobile-input" class="huddle-input" rows="1" placeholder="Tell me what's on your mind..." style="flex:1; background:transparent; border:none; outline:none; font-size:15px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; padding:10px 0; min-height:24px; max-height:96px; resize:none; line-height:1.4;"></textarea>
             <button class="huddle-send-btn" style="width:44px; height:44px; border-radius:50%; background:#536346; border:none; color:white; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 4px 12px rgba(83,99,70,0.3); flex-shrink:0;">
                 <span class="material-symbols-outlined">arrow_upward</span>
             </button>
@@ -350,7 +350,7 @@ function createTextBubble(text, time) {
             <span class="material-symbols-outlined" style="font-size:16px;color:white;">person</span>
         </div>
         <div style="background:#536346;color:white;padding:14px 16px;border-radius:16px;border-bottom-right-radius:4px;box-shadow:0 2px 8px rgba(83,99,70,0.2);">
-            <p style="font-size:15px;margin:0 0 4px;line-height:1.55;">${escapeHtml(text)}</p>
+            <p style="font-size:15px;margin:0 0 4px;line-height:1.55;white-space:pre-wrap;">${escapeHtml(text)}</p>
             <span style="font-size:10px;opacity:0.65;display:block;text-align:right;">${time}</span>
         </div>`;
     return w;
@@ -430,8 +430,12 @@ function readFileAsDataUrl(file) {
 // ── Wire up text inputs & send buttons ───────────────
 function initInputs() {
     document.querySelectorAll('.huddle-input').forEach(input => {
+        input.addEventListener('input', () => {
+            input.style.height = 'auto';
+            input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+        });
         input.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); sendMessage(input); }
         });
     });
     const desktopBtn = document.querySelector('.desktop-input .huddle-send-btn');
@@ -541,16 +545,175 @@ document.addEventListener('DOMContentLoaded', () => {
     initMediaButtons();
     initMobileFocusBehavior();
     renderMessages();
-    
-    // Load profile picture from localStorage
-    const savedImage = localStorage.getItem('sanctuary_profile_pic');
-    if (savedImage) {
-        const huddleSidebarProfileImg = document.getElementById('huddleSidebarProfileImg');
-        if (huddleSidebarProfileImg) {
-            huddleSidebarProfileImg.src = savedImage;
-        }
-    }
 });
 </script>
-{% endblock %}
 
+<script>
+(function() {
+    // ── CSRF helper ────────────────────────────────────────────────────────
+    function getCsrf() {
+        const match = document.cookie.match(/csrftoken=([^;]+)/);
+        return match ? match[1] : '';
+    }
+ 
+    // ── Priority colours (for the task preview cards) ─────────────────────
+    const PRIORITY_BADGE = {
+        high:   'background:rgba(220,38,38,0.1);color:#b91c1c;',
+        medium: 'background:rgba(217,119,6,0.1);color:#b45309;',
+        low:    'background:rgba(83,99,70,0.1);color:#536346;',
+    };
+ 
+    // ── Inject a task-preview panel above the desktop input bar ───────────
+    function ensureTaskPreview() {
+        if (document.getElementById('secretary-task-preview')) return;
+        const panel = document.createElement('div');
+        panel.id = 'secretary-task-preview';
+        panel.style.cssText = 'display:none; padding:0 64px 0; max-width:calc(768px + 128px); margin:0 auto;';
+        panel.innerHTML = `
+            <div style="background:#f5f3ee; border-radius:16px; padding:20px 24px; margin-bottom:8px; border:1px solid rgba(197,200,189,0.3);">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                    <span style="font-size:12px; font-weight:700; letter-spacing:0.12em; color:#536346; text-transform:uppercase;">Tasks parsed</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <select id="secretary-start-hour" style="background:#fff; border:1px solid rgba(197,200,189,0.5); border-radius:8px; padding:4px 8px; font-size:12px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif;">
+                            <option value="7">Start 7 AM</option>
+                            <option value="8">Start 8 AM</option>
+                            <option value="9" selected>Start 9 AM</option>
+                            <option value="10">Start 10 AM</option>
+                        </select>
+                        <button id="secretary-schedule-btn" style="background:#536346; color:white; border:none; border-radius:9999px; padding:6px 16px; font-size:12px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif;">
+                            Generate schedule →
+                        </button>
+                    </div>
+                </div>
+                <div id="secretary-task-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+                <div id="secretary-status" style="display:none; margin-top:8px; font-size:12px; color:#536346; font-style:italic;"></div>
+            </div>`;
+ 
+        // Insert above the desktop input bar
+        const inputBar = document.querySelector('.desktop-input');
+        if (inputBar) inputBar.parentNode.insertBefore(panel, inputBar);
+ 
+        document.getElementById('secretary-schedule-btn').addEventListener('click', generateSchedule);
+    }
+ 
+    function showTaskPreview(tasks) {
+        ensureTaskPreview();
+        const list = document.getElementById('secretary-task-list');
+        list.innerHTML = tasks.map(t => {
+            const priorityKey = (t.priority_key || t.priority || 'medium').toLowerCase();
+            return `
+            <div style="display:flex; align-items:center; gap:10px; padding:8px 12px; background:white; border-radius:10px;">
+                <span style="font-size:10px; font-weight:700; padding:3px 10px; border-radius:9999px; flex-shrink:0; ${PRIORITY_BADGE[priorityKey] || PRIORITY_BADGE.medium}">${escapeHtml(t.priority || priorityKey)}</span>
+                <span style="font-size:14px; color:#1b1c19; flex:1;">${escapeHtml(t.title || t.task)}</span>
+                <span style="font-size:11px; color:#75786f; flex-shrink:0;">${t.duration_minutes || t.duration || 30} min</span>
+            </div>`;
+        }).join('');
+        document.getElementById('secretary-task-preview').style.display = 'block';
+    }
+ 
+    function setStatus(msg) {
+        const el = document.getElementById('secretary-status');
+        if (!el) return;
+        el.textContent = msg;
+        el.style.display = msg ? 'block' : 'none';
+    }
+ 
+    // ── POST helpers ──────────────────────────────────────────────────────
+    async function postJSON(url, body) {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+            body: JSON.stringify(body),
+        });
+        return res.json();
+    }
+ 
+    async function parseAndSend(text) {
+        setStatus('Thinking…');
+        ensureTaskPreview();
+        document.getElementById('secretary-task-preview').style.display = 'block';
+        try {
+            const data = await postJSON('/parse-text/', { text });
+            const tasks = data.data?.tasks || data.tasks || [];
+            if (tasks.length) {
+                showTaskPreview(tasks);
+                setStatus(`Found ${tasks.length} task${tasks.length !== 1 ? 's' : ''}. Choose a start time and generate your schedule.`);
+            } else {
+                setStatus(data.error || 'Could not parse tasks. Try listing one per line.');
+            }
+        } catch (e) {
+            setStatus('Network error — check your connection.');
+        }
+    }
+ 
+    async function generateSchedule() {
+        const startHour = parseInt(document.getElementById('secretary-start-hour')?.value || 9);
+        setStatus('Building your schedule…');
+        try {
+            const data = await postJSON('/generate-schedule/', { start_hour: startHour });
+            const schedule = data.data?.schedule || data.schedule || [];
+            if (schedule.length) {
+                window.location.href = '/timeline/';
+            } else {
+                setStatus(data.error || 'Something went wrong generating the schedule.');
+            }
+        } catch (e) {
+            setStatus('Network error — could not generate schedule.');
+        }
+    }
+ 
+    // ── Image upload → backend ────────────────────────────────────────────
+    async function uploadImageToBackend(file) {
+        setStatus('Extracting tasks from image…');
+        ensureTaskPreview();
+        document.getElementById('secretary-task-preview').style.display = 'block';
+        const fd = new FormData();
+        fd.append('image', file);
+        try {
+            const res = await fetch('/upload-image/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrf() },
+                body: fd,
+            });
+            const data = await res.json();
+            const tasks = data.data?.tasks || data.tasks || [];
+            if (tasks.length) {
+                showTaskPreview(tasks);
+                setStatus(`Extracted ${tasks.length} task${tasks.length !== 1 ? 's' : ''} from image.`);
+            } else {
+                setStatus(data.error || 'Could not extract tasks from image.');
+            }
+        } catch (e) {
+            setStatus('Network error — image upload failed.');
+        }
+    }
+ 
+    // ── Intercept send buttons ────────────────────────────────────────────
+    // We wrap the EXISTING sendMessage function. The original still fires
+    // (adding the bubble to localStorage/DOM) and THEN we call the backend.
+    const _origSendMessage = window.sendMessage;
+    window.sendMessage = function(inputEl) {
+        const text = inputEl ? inputEl.value.trim() : '';
+        if (_origSendMessage) _origSendMessage(inputEl);   // original UI behaviour
+        if (text) parseAndSend(text);                      // backend call
+    };
+ 
+    // ── Intercept image inputs → also post to backend ─────────────────────
+    ['upload-input', 'camera-input'].forEach(id => {
+        const inp = document.getElementById(id);
+        if (!inp) return;
+        inp.addEventListener('change', () => {
+            const file = inp.files && inp.files[0];
+            if (file) uploadImageToBackend(file);
+            // Note: the original readFileAsDataUrl / sendImage still fires
+            // because the existing listener was attached before this one.
+        });
+    });
+ 
+    // ── escapeHtml (local copy so this script is self-contained) ──────────
+    function escapeHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+})();
+</script>
+{% endblock %}
