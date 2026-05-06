@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AI Secretary is a Django web application — "Your intelligent daily planner." It is a hackathon project currently in early scaffolding stage, with navigation stubs for Dashboard, Schedule, and Auth but no business logic implemented yet.
+AI Secretary is a Django web application — "Your intelligent daily planner." Users type or photograph their tasks, the backend parses them into structured items with priority and duration, then generates a time-blocked schedule. The current AI pipeline is mock-based (regex + optional OCR), with no external LLM integration yet.
 
 ## Development Commands
 
@@ -21,39 +21,51 @@ python manage.py tailwind start
 # Apply database migrations
 python manage.py migrate
 
+# Run all tests
+python manage.py test
+
+# Run a single test class or method
+python manage.py test core.tests.AuthFlowTests
+python manage.py test core.tests.MockAIPipelineTests.test_parse_text_returns_tasks
+
 # Build Tailwind CSS for production
 python manage.py tailwind build
-
-# Collect static files for production
-python manage.py collectstatic
 ```
 
-There is no `requirements.txt` — dependencies live in `venv/`. To regenerate: `pip freeze > requirements.txt`.
+`requirements.txt` exists but is incomplete — gunicorn, whitenoise, psycopg2-binary, and django-browser-reload are installed in `venv/` but not listed. Regenerate with `pip freeze > requirements.txt` if needed.
 
 ## Architecture
 
-**Entry points:**
-- `config/urls.py` — all URL routing; the home view is currently defined inline here
-- `config/settings.py` — Django configuration (SQLite, DEBUG=True, hardcoded SECRET_KEY — not production-ready)
-- `manage.py` — Django CLI
+**URL routing** splits across two files:
+- `config/urls.py` — page views: `/`, `/login/`, `/logout/`, `/register/`, `/huddle/`, `/timeline/`, `/profile/`
+- `core/urls.py` — API endpoints: `/parse-text/`, `/upload-image/`, `/generate-schedule/`
+
+All view logic lives in `core/views.py`. Auth uses Django's built-in `User` model with a `UserProfile` OneToOneField extension.
+
+**Data model** (`core/models.py`):
+- `UserProfile.parsed_tasks` — JSONField storing task dicts `{id, title, priority, priority_key, duration_minutes, time}`
+- `UserProfile.schedule` — JSONField storing schedule items (same shape plus `start_time`, `end_time`)
+- `UserProfile.avatar_data` — base64-encoded profile image stored directly in the DB
+
+**AI pipeline** (all in `core/views.py`, no external API calls):
+1. `parse_text` — regex keyword matching for priority, duration, and time hints; splits on newlines/semicolons
+2. `upload_image` — pytesseract OCR if available, else returns hardcoded fallback text
+3. `generate_schedule` — sorts tasks (pinned explicit times first, then high→medium→low priority), allocates consecutive blocks with 10-min breaks, persists to `UserProfile`
 
 **Template system:**
-- `templates/base.html` — base layout with Tailwind-styled navbar (Dashboard, Schedule, Logout stubs)
-- `templates/home.html` — homepage placeholder; extends base
+- `templates/base_auth.html` — base layout; loads Tailwind CSS and Google Fonts (Plus Jakarta Sans, Material Symbols); all page templates extend this
+- `templates/components/` — reusable partials (navbars, buttons, cards, orb, timeline items)
+- `base.html` and `home.html` are legacy and not actively used
+
+**JavaScript:** All JS is inline in templates (no separate `.js` files, no framework). `huddle.html` stores chat history in `localStorage` under key `sanctuary_huddle_messages` and calls the three API endpoints via `fetch` with CSRF token from cookie.
 
 **Styling:**
 - `theme/` is a Django app dedicated to Tailwind CSS via `django-tailwind`
-- Source: `theme/static_src/src/styles.css` (Tailwind directives)
+- Source: `theme/static_src/src/styles.css`
 - Output: `theme/static/css/dist/styles.css` (built/minified)
-- `django-browser-reload` is installed for hot-reload during development
+- `django-browser-reload` provides hot-reload in development
 
-**Database:** SQLite (`db.sqlite3`) for development; `psycopg2-binary` is installed for a planned PostgreSQL migration.
-
-**Production stack:** Gunicorn (WSGI server) + Whitenoise (static files) are already installed.
-
-## Settings Notes
-
-- `SECRET_KEY` is hardcoded in `config/settings.py` — move to `.env` before any deployment
-- `ALLOWED_HOSTS = []` must be populated before deployment
-- `INTERNAL_IPS = ['127.0.0.1']` enables `django-browser-reload` locally
-- `TAILWIND_APP_NAME = 'theme'` ties the theme app to the tailwind management commands
+**Settings notes:**
+- `SECRET_KEY` is hardcoded — move to `.env` before deployment
+- `ALLOWED_HOSTS = []` — must be populated before deployment
+- `LOGIN_REDIRECT_URL = '/huddle/'`, `LOGOUT_REDIRECT_URL = '/'`
