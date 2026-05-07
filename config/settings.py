@@ -10,7 +10,18 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-)k251((a+l^a89oe4y%*x
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else ['*']
+
+# CSRF Trusted Origins — hardcoded Railway domain + any extras from env
+CSRF_TRUSTED_ORIGINS = [
+    'https://web-production-fb6cc.up.railway.app',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
+_extra_csrf = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+if _extra_csrf:
+    CSRF_TRUSTED_ORIGINS += [o.strip() for o in _extra_csrf.split(',') if o.strip()]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -93,12 +104,10 @@ LOGOUT_REDIRECT_URL = '/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
-
 AI_API_KEY = os.environ.get('AI_API_KEY', os.environ.get('OPENAI_API_KEY', ''))
 AI_BASE_URL = os.environ.get('AI_BASE_URL', None)
 AI_MODEL = os.environ.get('AI_MODEL', 'gpt-4o')
 
-# Vision model — auto-picks a vision-capable model based on provider if not set
 _vision_model_env = os.environ.get('AI_VISION_MODEL', '')
 if _vision_model_env:
     AI_VISION_MODEL = _vision_model_env
