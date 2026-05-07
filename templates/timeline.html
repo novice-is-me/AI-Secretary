@@ -1,5 +1,5 @@
 {% extends 'base_auth.html' %}
-{% block title %}Timeline | Sanctuary{% endblock %}
+{% block title %}Timeline | SecAI{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -61,7 +61,7 @@
                 <span class="material-symbols-outlined" style="color:white; font-variation-settings:'FILL' 1;">spa</span>
             </div>
             <div>
-                <div style="font-size:22px; font-weight:600; color:#94A684; line-height:1.2;">Sanctuary</div>
+                <div style="font-size:22px; font-weight:600; color:#94A684; line-height:1.2;">SecAI</div>
                 <div style="font-size:10px; color:#75786f; letter-spacing:0.12em; text-transform:uppercase;">Calm Companion</div>
             </div>
         </div>
@@ -80,7 +80,7 @@
         <a href="{% url 'profile' %}" style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#f0eee9; border-radius:12px; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='#e4e2dd'" onmouseout="this.style.background='#f0eee9'">
             <img id="timelineSidebarProfileImg" src="{{ profile_image_url }}" alt="{{ display_name }}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;" />
             <div style="display:flex; flex-direction:column;">
-                <span style="font-size:14px; font-weight:600; color:#1b1c19;">{{ display_name }}</span>
+                <span style="font-size:14px; font-weight:600; color:#1b1c19; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px; display:block;">{{ display_name }}</span>
             </div>
         </a>
     </div>
@@ -91,7 +91,7 @@
 <header class="tl-mobile-header" style="display:none; justify-content:space-between; align-items:center; padding:16px 24px; position:fixed; top:0; left:0; right:0; z-index:50; background:rgba(253,252,251,0.85); backdrop-filter:blur(12px);">
   <div style="display:flex; align-items:center; gap:8px;">
     <span class="material-symbols-outlined" style="color:#94A684; font-variation-settings:'FILL' 1;">spa</span>
-    <h1 style="font-size:20px; font-weight:700; color:#94A684; margin:0;">Sanctuary</h1>
+    <h1 style="font-size:20px; font-weight:700; color:#94A684; margin:0;">SecAI</h1>
   </div>
   <span class="material-symbols-outlined" style="color:#75786f;">account_circle</span>
 </header>
@@ -289,7 +289,7 @@
       <label style="font-size:12px; font-weight:600; color:#536346; letter-spacing:0.08em; text-transform:uppercase; display:block; margin-bottom:6px;">Start Time <span style="font-weight:400; text-transform:none; letter-spacing:0; color:#75786f;">(optional)</span></label>
       <div style="display:flex; gap:8px;">
         <input id="at-time" type="time" style="width:100%; padding:12px 16px; border:1px solid rgba(197,200,189,0.6); border-radius:12px; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif; color:#1b1c19; background:#fafaf8; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#94a684'" onblur="this.style.borderColor='rgba(197,200,189,0.6)'" />
-        <button type="button" onclick="setAddTaskAutoTime()" title="Let Sanctuary choose the best open time" style="padding:0 14px; border:1px solid rgba(148,166,132,0.35); border-radius:12px; background:#f5f3ee; color:#536346; font-size:12px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer;">Auto</button>
+        <button type="button" onclick="setAddTaskAutoTime()" title="Let SecAI choose the best open time" style="padding:0 14px; border:1px solid rgba(148,166,132,0.35); border-radius:12px; background:#f5f3ee; color:#536346; font-size:12px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer;">Auto</button>
       </div>
       </div>
     </div>

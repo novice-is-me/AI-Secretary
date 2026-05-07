@@ -133,9 +133,9 @@ def profile_view(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
     if request.method == 'POST':
-        full_name = request.POST.get('full_name', '').strip()
+        full_name = request.POST.get('full_name', '').strip()[:60]
         email = request.POST.get('email', '').strip().lower()
-        bio = request.POST.get('bio', '').strip()
+        bio = request.POST.get('bio', '').strip()[:160]
         avatar_data = request.POST.get('avatar_data', '').strip()
 
         if not full_name:
@@ -411,19 +411,221 @@ def _api_error(message):
 
 @login_required
 @require_POST
-def parse_text(request):
-    """POST /parse-text/  ->  { success, data: { tasks }, error }"""
+def chat_view(request):
+    """POST /chat/ — conversational task extraction with confirmation before saving."""
     try:
         body = json.loads(request.body)
-        raw  = body.get('text', '').strip()
+        message = body.get('message', '').strip()
+        history = body.get('history', [])
+        pending_tasks = body.get('pending_tasks', [])
+    except (json.JSONDecodeError, AttributeError):
+        return JsonResponse(_api_error('Invalid request.'), status=400)
+
+    if not message:
+        return JsonResponse(_api_error('No message provided.'), status=400)
+
+    today = timezone.localdate()
+
+    if pending_tasks:
+        system_content = f"""You are SecAI, a calm AI daily planner. Today is {today.strftime('%A, %B %d, %Y')}.
+
+The user is reviewing a schedule you already extracted for them:
+{json.dumps(pending_tasks, indent=2)}
+
+Respond ONLY with a valid JSON object. No markdown, no extra text.
+
+Schema:
+{{
+  "reply": "warm, concise message (1-3 sentences)",
+  "tasks": [],
+  "confirmed": false
+}}
+
+Each task in "tasks":
+  "title": string,
+  "duration_minutes": integer (never null — default to 30 if unsure),
+  "fixed_time": "HH:MM" or null  (use the "time" value from pending tasks if it had one, otherwise null),
+  "priority": "high" | "medium" | "low",
+  "schedule_date": "YYYY-MM-DD"
+
+Rules:
+- If the user confirms (yes, looks good, perfect, go ahead, create it, that's it, sounds right, etc.) → set confirmed: true, copy ALL pending tasks back with their original times and durations preserved, reply warmly
+- If the user wants to add a task → append it to the existing list, set confirmed: false, briefly list the full updated set and ask if they're happy with it
+- If the user wants to remove or change a task → update accordingly, confirmed: false, show the updated list
+- If the user is chatting or asking something unrelated → answer helpfully, return the same tasks unchanged, confirmed: false
+- duration_minutes must always be a positive integer, never null"""
+    else:
+        system_content = f"""You are SecAI, a calm AI daily planner. Today is {today.strftime('%A, %B %d, %Y')}.
+
+Respond ONLY with a valid JSON object. No markdown, no extra text.
+
+Schema:
+{{
+  "reply": "warm, conversational message (2-4 sentences)",
+  "tasks": []
+}}
+
+Each task in "tasks":
+  "title": string,
+  "duration_minutes": integer (meetings 30-60, study 60-120, errands 15-30, deep work 90-120),
+  "fixed_time": "HH:MM" or null  (only when the user gives an explicit time),
+  "priority": "high" | "medium" | "low",
+  "schedule_date": "YYYY-MM-DD"  (today={today.isoformat()} unless the user specifies another day)
+
+Rules:
+- Extract EVERY task, appointment, errand, or commitment the user mentions
+- No fixed_time mentioned → leave it null (the scheduler finds the best slot)
+- Be generous with durations; tasks always take longer than expected
+- If tasks found: in your reply, list them out warmly (e.g. "Here's what I've got for you: ...") and ask if this looks right or if they'd like to add or change anything. Sound natural, not robotic.
+- If no actionable items (pure casual chat): just reply naturally, return tasks: []"""
+
+    messages_payload = [{"role": "system", "content": system_content}]
+    for msg in (history or [])[-6:]:
+        role = "user" if msg.get('role') == 'user' else "assistant"
+        text = str(msg.get('text') or '').strip()
+        if text:
+            messages_payload.append({"role": role, "content": text})
+    messages_payload.append({"role": "user", "content": message})
+
+    content = ''
+    try:
+        from scheduler.services.ai_service import _get_client
+        from django.conf import settings as django_settings
+        client = _get_client()
+        model = getattr(django_settings, 'AI_MODEL', 'gpt-4o')
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages_payload,
+            temperature=0.4,
+            max_tokens=800,
+        )
+        content = response.choices[0].message.content.strip()
+        if content.startswith('```'):
+            content = re.sub(r'^```[a-z]*\n?', '', content)
+            content = re.sub(r'\n?```$', '', content).strip()
+
+        data = json.loads(content)
+        reply = data.get('reply', '')
+        tasks = _normalize_chat_tasks(data.get('tasks', []), today.isoformat())
+        confirmed = bool(data.get('confirmed', False))
+
+        if confirmed and tasks:
+            _save_schedule_for_tasks(request, tasks)
+            return JsonResponse({'success': True, 'reply': reply, 'tasks': tasks, 'redirect': '/timeline/'})
+
+        return JsonResponse({'success': True, 'reply': reply, 'tasks': tasks, 'redirect': None})
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': True, 'reply': content or "I'm here — what's on your mind?", 'tasks': [], 'redirect': None})
+    except Exception as e:
+        from django.conf import settings as django_settings
+        import traceback
+        if django_settings.DEBUG:
+            return JsonResponse({
+                'success': False,
+                'reply': f"[DEBUG] {type(e).__name__}: {e}",
+                'redirect': None,
+                'tasks': [],
+                'traceback': traceback.format_exc(),
+            })
+        return JsonResponse({
+            'success': False,
+            'reply': "I'm having trouble connecting right now. Try again in a moment.",
+            'redirect': None,
+            'tasks': [],
+        })
+
+
+def _normalize_chat_tasks(raw_tasks, fallback_date):
+    tasks = []
+    for i, t in enumerate(raw_tasks or []):
+        priority = str(t.get('priority', 'medium')).lower()
+        if priority not in ('high', 'medium', 'low'):
+            priority = 'medium'
+        duration = int(t.get('duration_minutes') or t.get('duration') or 30)
+        tasks.append({
+            'id': i + 1,
+            'title': t.get('title', 'Untitled task'),
+            'task': t.get('title', 'Untitled task'),
+            'priority': priority.title(),
+            'priority_key': priority,
+            'duration_minutes': duration,
+            'duration': duration,
+            'time': t.get('fixed_time') or t.get('time') or None,
+            'schedule_date': t.get('schedule_date') or fallback_date,
+        })
+    return tasks
+
+
+def _generate_full_schedule(tasks, start_hour=9):
+    """Generate schedule for tasks, grouped by date."""
+    from collections import defaultdict
+    by_date = defaultdict(list)
+    for task in tasks:
+        by_date[task.get('schedule_date') or timezone.localdate().isoformat()].append(task)
+    result = []
+    for date_key in sorted(by_date):
+        result.extend(_generate_schedule(by_date[date_key], start_hour=start_hour, schedule_date=date_key))
+    return result
+
+
+def _save_schedule_for_tasks(request, tasks):
+    """Generate + persist schedule for the given tasks, preserving other dates."""
+    schedule = _generate_full_schedule(tasks)
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    changed_dates = {t.get('schedule_date') for t in tasks}
+    kept_tasks = [t for t in (profile.parsed_tasks or []) if t.get('schedule_date') not in changed_dates]
+    kept_schedule = [s for s in (profile.schedule or []) if s.get('schedule_date') not in changed_dates]
+    profile.parsed_tasks = kept_tasks + tasks
+    profile.schedule = sorted(
+        kept_schedule + schedule,
+        key=lambda x: (x.get('schedule_date', ''), x.get('start_time', '')),
+    )
+    profile.save(update_fields=['parsed_tasks', 'schedule'])
+    request.session['parsed_tasks'] = profile.parsed_tasks
+    request.session['schedule'] = profile.schedule
+
+
+@login_required
+@require_POST
+def parse_text(request):
+    """POST /parse-text/  ->  { success, data: { tasks }, error }"""
+    body = {}
+    raw = ''
+    try:
+        body = json.loads(request.body)
+        raw = body.get('text', '').strip()
     except (json.JSONDecodeError, AttributeError):
         raw = request.POST.get('text', '').strip()
 
     if not raw:
         return JsonResponse({**_api_error('No text provided.'), 'tasks': []}, status=400)
 
-    schedule_date = _normalize_schedule_date(body.get('schedule_date') if 'body' in locals() else request.POST.get('schedule_date'))
-    tasks = [{**task, 'schedule_date': schedule_date} for task in _parse_raw_tasks(raw)]
+    schedule_date = _normalize_schedule_date(body.get('schedule_date') or request.POST.get('schedule_date'))
+
+    tasks = None
+    try:
+        from scheduler.services.ai_service import parse_tasks_from_text as ai_parse
+        raw_tasks = ai_parse(raw, today=timezone.localdate())
+        tasks = []
+        for i, t in enumerate(raw_tasks):
+            priority = str(t.get('priority', 'medium')).lower()
+            if priority not in ('high', 'medium', 'low'):
+                priority = 'medium'
+            tasks.append({
+                'id': i + 1,
+                'title': t.get('title', 'Untitled task'),
+                'task': t.get('title', 'Untitled task'),
+                'priority': priority.title(),
+                'priority_key': priority,
+                'duration_minutes': int(t.get('duration_minutes', 30)),
+                'duration': int(t.get('duration_minutes', 30)),
+                'time': t.get('fixed_time'),
+                'schedule_date': schedule_date,
+            })
+    except Exception:
+        tasks = [{**task, 'schedule_date': schedule_date} for task in _parse_raw_tasks(raw)]
+
     request.session['parsed_tasks'] = tasks
     return JsonResponse({**_api_success({'tasks': tasks}), 'tasks': tasks})
 
@@ -431,20 +633,87 @@ def parse_text(request):
 @login_required
 @require_POST
 def upload_image(request):
-    """POST /upload-image/  ->  { success, data: { extracted_text, tasks }, error }"""
+    """POST /upload-image/ — vision → schedule → redirect to timeline."""
     image_file = request.FILES.get('image')
     if not image_file:
         return JsonResponse({**_api_error('No image uploaded.'), 'tasks': []}, status=400)
 
-    extracted = _ocr_extract(image_file)
     schedule_date = _normalize_schedule_date(request.POST.get('schedule_date'))
-    tasks = [{**task, 'schedule_date': schedule_date} for task in _parse_raw_tasks(extracted)]
-    request.session['parsed_tasks'] = tasks
-    return JsonResponse({
-        **_api_success({'extracted_text': extracted, 'tasks': tasks}),
-        'extracted_text': extracted,
-        'tasks': tasks,
-    })
+    today = timezone.localdate()
+    img_bytes = image_file.read()
+    mime = getattr(image_file, 'content_type', None) or 'image/jpeg'
+
+    tasks = None
+    last_error = None
+
+    # 1. OpenAI vision
+    try:
+        tasks = _vision_extract_tasks(img_bytes, mime, today, schedule_date)
+    except Exception as e:
+        last_error = e
+
+    # 2. Fallback: OCR → AI text parser → local parser
+    if not tasks:
+        from io import BytesIO
+        extracted = _ocr_extract(BytesIO(img_bytes))
+        if extracted:
+            try:
+                from scheduler.services.ai_service import parse_tasks_from_text as ai_parse
+                tasks = _normalize_chat_tasks(ai_parse(extracted, today=today), schedule_date)
+            except Exception as e:
+                last_error = e
+                tasks = [{**t, 'schedule_date': schedule_date} for t in _parse_raw_tasks(extracted)]
+
+    if not tasks:
+        from django.conf import settings as django_settings
+        import traceback
+        if django_settings.DEBUG and last_error:
+            return JsonResponse({
+                'success': False,
+                'error': f'[DEBUG] {type(last_error).__name__}: {last_error}',
+                'tasks': [],
+                'traceback': traceback.format_exc(),
+            })
+        return JsonResponse({**_api_error('Could not extract tasks from image.'), 'tasks': []})
+
+    _save_schedule_for_tasks(request, tasks)
+    return JsonResponse({**_api_success({'tasks': tasks}), 'tasks': tasks, 'redirect': '/timeline/'})
+
+
+def _vision_extract_tasks(img_bytes, mime, today, schedule_date):
+    """Call vision-capable model to extract tasks from an image."""
+    import base64
+    b64 = base64.b64encode(img_bytes).decode('utf-8')
+
+    from scheduler.services.ai_service import _get_client
+    from django.conf import settings as django_settings
+    client = _get_client()
+    model = getattr(django_settings, 'AI_VISION_MODEL', None) or getattr(django_settings, 'AI_MODEL', 'gpt-4o')
+
+    prompt = (
+        f"Extract every task, to-do, appointment, or schedule item visible in this image. "
+        f"Today is {today.strftime('%A, %B %d, %Y')}. "
+        f"Return ONLY a valid JSON object: "
+        f'{{ "tasks": [ {{ "title": string, "duration_minutes": int, "fixed_time": "HH:MM" or null, '
+        f'"priority": "high"|"medium"|"low", "schedule_date": "{schedule_date}" }} ] }}'
+    )
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64}"}},
+            ],
+        }],
+        max_tokens=800,
+    )
+    content = response.choices[0].message.content.strip()
+    if content.startswith('```'):
+        content = re.sub(r'^```[a-z]*\n?', '', content)
+        content = re.sub(r'\n?```$', '', content).strip()
+    data = json.loads(content)
+    return _normalize_chat_tasks(data.get('tasks', []), schedule_date)
 
 
 def _ocr_extract(image_file):
@@ -453,13 +722,7 @@ def _ocr_extract(image_file):
         from PIL import Image
         return pytesseract.image_to_string(Image.open(image_file))
     except Exception:
-        # Graceful fallback keeps the demo alive without pytesseract
-        return (
-            'Review project proposal\n'
-            'Urgent: send budget report\n'
-            'Team standup at 10am\n'
-            'Read documentation for new API\n'
-        )
+        return ''
 
 
 @login_required

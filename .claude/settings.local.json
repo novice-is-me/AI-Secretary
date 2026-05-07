@@ -18,7 +18,13 @@
       "Bash(git checkout *)",
       "Bash(git rm *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Regina Jalandoni\\\\Documents\\\\WEB DEV\\\\hackathon\\\\ai-secretary\" -Recurse -Force)",
+      "Bash(Select-Object FullName, PSIsContainer)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(venv\\\\Scripts\\\\python.exe manage.py migrate)",
+      "Bash(python -c ' *)"
     ]
   }
 }

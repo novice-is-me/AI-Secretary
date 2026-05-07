@@ -1,5 +1,5 @@
 {% extends 'base_auth.html' %}
-{% block title %}Huddle | Sanctuary{% endblock %}
+{% block title %}Huddle | SecAI{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -26,7 +26,7 @@
                 <span class="material-symbols-outlined" style="color:white; font-variation-settings:'FILL' 1;">spa</span>
             </div>
             <div>
-                <div style="font-size:22px; font-weight:600; color:#94A684; line-height:1.2;">Sanctuary</div>
+                <div style="font-size:22px; font-weight:600; color:#94A684; line-height:1.2;">SecAI</div>
                 <div style="font-size:10px; color:#75786f; letter-spacing:0.12em; text-transform:uppercase;">Calm Companion</div>
             </div>
         </div>
@@ -46,7 +46,7 @@
         <a href="{% url 'profile' %}" style="display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px; background:#f0eee9; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='#e4e2dd'" onmouseout="this.style.background='#f0eee9'">
             <img id="huddleSidebarProfileImg" src="{{ profile_image_url }}" alt="{{ display_name }}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;"/>
             <div>
-                <div style="font-size:14px; font-weight:600; color:#1b1c19;">{{ display_name }}</div>
+                <div style="font-size:14px; font-weight:600; color:#1b1c19; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;">{{ display_name }}</div>
             </div>
         </a>
     </div>
@@ -56,7 +56,7 @@
 <header class="mobile-topnav" style="display:none; position:fixed; top:0; left:0; right:0; z-index:50; justify-content:space-between; align-items:center; padding:16px 24px; background:rgba(253,252,251,0.85); backdrop-filter:blur(12px);">
   <div style="display:flex; align-items:center; gap:8px;">
     <span class="material-symbols-outlined" style="color:#94A684; font-variation-settings:'FILL' 1;">spa</span>
-    <h1 style="font-size:20px; font-weight:700; color:#94A684; margin:0;">Sanctuary</h1>
+    <h1 style="font-size:20px; font-weight:700; color:#94A684; margin:0;">SecAI</h1>
   </div>
   <span class="material-symbols-outlined" style="color:#75786f;">account_circle</span>
 </header>
@@ -108,17 +108,6 @@
     <!-- ── Desktop Input Bar ── -->
     <div class="desktop-input" style="padding:16px 64px 24px; background:rgba(251,249,244,0.95); backdrop-filter:blur(8px); border-top:1px solid rgba(197,200,189,0.15); flex-shrink:0;">
         <div style="max-width:768px; margin:0 auto;">
-            <!-- Mode toggle -->
-            <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
-                <div style="display:flex; background:#eae8e3; border-radius:9999px; padding:3px; gap:2px;">
-                    <button id="mode-chat-btn" onclick="window.setMode('chat')" style="display:flex; align-items:center; gap:5px; padding:5px 14px; border-radius:9999px; border:none; font-size:12px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; color:#75786f; background:none; transition:all 0.2s;">
-                        <span class="material-symbols-outlined" style="font-size:14px;">chat</span> Chat
-                    </button>
-                    <button id="mode-tasks-btn" onclick="window.setMode('tasks')" style="display:flex; align-items:center; gap:5px; padding:5px 14px; border-radius:9999px; border:none; font-size:12px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; color:white; background:#536346; transition:all 0.2s;">
-                        <span class="material-symbols-outlined" style="font-size:14px;">checklist</span> Add Tasks
-                    </button>
-                </div>
-            </div>
             <div class="glass-effect" style="border-radius:9999px; border:1px solid white; padding:8px; display:flex; align-items:center; gap:8px; box-shadow:0 8px 32px rgba(83,99,70,0.08);">
                 <!-- + button with popup -->
                 <div style="position:relative; flex-shrink:0;">
@@ -137,7 +126,7 @@
                         </button>
                     </div>
                 </div>
-                <textarea id="desktop-input" class="huddle-input" rows="1" placeholder="What's on your mind?" style="flex:1; background:transparent; border:none; outline:none; font-size:16px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; padding:8px; min-height:24px; max-height:120px; resize:none; line-height:1.45;"></textarea>
+                <textarea id="desktop-input" class="huddle-input" rows="1" placeholder="Tell me what you need to get done today..." style="flex:1; background:transparent; border:none; outline:none; font-size:16px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; padding:8px; min-height:24px; max-height:120px; resize:none; line-height:1.45;"></textarea>
                 <div style="padding-right:8px;">
                     <button class="huddle-send-btn" style="width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#536346; border:none; color:white; cursor:pointer; box-shadow:0 4px 12px rgba(83,99,70,0.3); transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         <span class="material-symbols-outlined">arrow_forward</span>
@@ -149,15 +138,6 @@
 
     <!-- ── Mobile Input + Bottom Nav ── -->
     <div class="mobile-bottom" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:50; flex-direction:column; align-items:center; gap:0;">
-        <!-- Mode toggle (mobile) -->
-        <div style="display:flex; background:#eae8e3; border-radius:9999px; padding:3px; gap:2px; margin-bottom:8px;">
-            <button id="mobile-mode-chat-btn" onclick="window.setMode('chat')" style="display:flex; align-items:center; gap:5px; padding:5px 14px; border-radius:9999px; border:none; font-size:11px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; color:#75786f; background:none; transition:all 0.2s;">
-                <span class="material-symbols-outlined" style="font-size:13px;">chat</span> Chat
-            </button>
-            <button id="mobile-mode-tasks-btn" onclick="window.setMode('tasks')" style="display:flex; align-items:center; gap:5px; padding:5px 14px; border-radius:9999px; border:none; font-size:11px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; color:white; background:#536346; transition:all 0.2s;">
-                <span class="material-symbols-outlined" style="font-size:13px;">checklist</span> Add Tasks
-            </button>
-        </div>
         <!-- Chat input row -->
         <div style="width:calc(100% - 48px); margin-bottom:12px; background:rgba(251,249,244,0.82); backdrop-filter:blur(20px); border-radius:9999px; padding:4px 8px 4px 8px; display:flex; align-items:center; gap:6px; box-shadow:0 4px 24px rgba(148,166,132,0.15); border:1px solid rgba(255,255,255,0.5);">
             <!-- + button with popup (mobile) -->
@@ -177,7 +157,7 @@
                     </button>
                 </div>
             </div>
-            <textarea id="mobile-input" class="huddle-input" rows="1" placeholder="Tell me what's on your mind..." style="flex:1; background:transparent; border:none; outline:none; font-size:15px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; padding:10px 0; min-height:24px; max-height:96px; resize:none; line-height:1.4;"></textarea>
+            <textarea id="mobile-input" class="huddle-input" rows="1" placeholder="What do you need to get done today?" style="flex:1; background:transparent; border:none; outline:none; font-size:15px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; padding:10px 0; min-height:24px; max-height:96px; resize:none; line-height:1.4;"></textarea>
             <button class="huddle-send-btn" style="width:44px; height:44px; border-radius:50%; background:#536346; border:none; color:white; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 4px 12px rgba(83,99,70,0.3); flex-shrink:0;">
                 <span class="material-symbols-outlined">arrow_upward</span>
             </button>
@@ -532,211 +512,94 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <script>
 (function() {
-    // ── CSRF helper ───────────────────────────────────────────────────────
     function getCsrf() {
         const match = document.cookie.match(/csrftoken=([^;]+)/);
         return match ? match[1] : '';
     }
 
-    function escapeHtml(str) {
-        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
+    // Tasks the AI extracted but the user hasn't confirmed yet
+    let pendingTasks = [];
 
-    // ── Mode toggle (Chat vs Add Tasks) ──────────────────────────────────
-    let tasksMode = true;
-
-    window.setMode = function(mode) {
-        tasksMode = mode === 'tasks';
-        const active   = 'background:#536346;color:white;';
-        const inactive = 'background:none;color:#75786f;';
-        [
-            ['mode-chat-btn',        !tasksMode],
-            ['mode-tasks-btn',        tasksMode],
-            ['mobile-mode-chat-btn', !tasksMode],
-            ['mobile-mode-tasks-btn', tasksMode],
-        ].forEach(([id, isActive]) => {
-            const el = document.getElementById(id);
-            if (el) el.style.cssText += isActive ? active : inactive;
-        });
-        const placeholder = tasksMode ? 'What tasks are on your list?' : "What's on your mind?";
-        document.querySelectorAll('.huddle-input').forEach(inp => inp.placeholder = placeholder);
+    // ── All sends go to AI ────────────────────────────────────────────────
+    const _origSendMessage = window.sendMessage;
+    window.sendMessage = function(inputEl) {
+        const text = inputEl ? inputEl.value.trim() : '';
+        if (!text) return;
+        if (_origSendMessage) _origSendMessage(inputEl);
+        callChatApi(text);
     };
 
-    // ── Priority colours ──────────────────────────────────────────────────
-    const PRIORITY_BADGE = {
-        high:   'background:rgba(220,38,38,0.1);color:#b91c1c;',
-        medium: 'background:rgba(217,119,6,0.1);color:#b45309;',
-        low:    'background:rgba(83,99,70,0.1);color:#536346;',
-    };
-
-    let currentTasks = [];
-    let currentScheduleDate = new Date().toISOString().slice(0, 10);
-
-    // ── Task preview panel ────────────────────────────────────────────────
-    function ensureTaskPreview() {
-        if (document.getElementById('secretary-task-preview')) return;
-        const panel = document.createElement('div');
-        panel.id = 'secretary-task-preview';
-        panel.style.cssText = 'display:none; padding:0 64px 0; max-width:calc(768px + 128px); margin:0 auto;';
-        panel.innerHTML = `
-            <div style="background:#f5f3ee; border-radius:16px; padding:20px 24px; margin-bottom:8px; border:1px solid rgba(197,200,189,0.3);">
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                        <span style="font-size:12px; font-weight:700; letter-spacing:0.12em; color:#536346; text-transform:uppercase;">Tasks parsed</span>
-                        <input id="secretary-schedule-date" type="date" value="${currentScheduleDate}" min="${new Date().toISOString().slice(0, 10)}" title="Choose which day to plan" style="border:1px solid rgba(197,200,189,0.55); background:white; color:#1b1c19; border-radius:9999px; padding:7px 12px; font-size:12px; font-family:'Plus Jakarta Sans',sans-serif;" />
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <button id="secretary-schedule-btn" style="background:#536346; color:white; border:none; border-radius:9999px; padding:6px 16px; font-size:12px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif;">
-                            Generate schedule →
-                        </button>
-                        <button id="secretary-close-btn" title="Close" style="width:28px; height:28px; border-radius:50%; border:1px solid rgba(197,200,189,0.5); background:none; color:#75786f; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                            <span class="material-symbols-outlined" style="font-size:16px;">close</span>
-                        </button>
-                    </div>
+    function showTyping() {
+        ['desktop-chat-feed', 'mobile-chat-feed'].forEach(id => {
+            const feed = document.getElementById(id);
+            if (!feed) return;
+            const dot = document.createElement('div');
+            dot.className = 'typing-bubble assistant-msg-bubble';
+            dot.style.cssText = 'display:flex;gap:12px;max-width:85%;margin-right:auto;margin-top:12px;';
+            dot.innerHTML = `
+                <div style="width:32px;height:32px;border-radius:50%;background:#94a684;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:4px;">
+                    <span class="material-symbols-outlined" style="font-size:17px;color:white;font-variation-settings:'FILL' 1;">spa</span>
                 </div>
-                <div id="secretary-task-list" style="display:flex; flex-direction:column; gap:6px;"></div>
-                <div id="secretary-status" style="display:none; margin-top:8px; font-size:12px; color:#536346; font-style:italic;"></div>
-            </div>`;
-
-        const inputBar = document.querySelector('.desktop-input');
-        if (inputBar) inputBar.parentNode.insertBefore(panel, inputBar);
-
-        document.getElementById('secretary-schedule-date').addEventListener('change', e => {
-            currentScheduleDate = e.target.value || new Date().toISOString().slice(0, 10);
-            currentTasks = currentTasks.map(task => ({ ...task, schedule_date: currentScheduleDate }));
+                <div style="background:#f5f3ee;padding:14px 16px;border-radius:16px;border-bottom-left-radius:4px;border:1px solid rgba(197,200,189,0.35);">
+                    <div style="display:flex;gap:4px;align-items:center;height:20px;">
+                        <span style="width:6px;height:6px;border-radius:50%;background:#94a684;display:inline-block;animation:pulse 1s infinite;"></span>
+                        <span style="width:6px;height:6px;border-radius:50%;background:#94a684;display:inline-block;animation:pulse 1s 0.2s infinite;"></span>
+                        <span style="width:6px;height:6px;border-radius:50%;background:#94a684;display:inline-block;animation:pulse 1s 0.4s infinite;"></span>
+                    </div>
+                </div>`;
+            feed.appendChild(dot);
         });
-        document.getElementById('secretary-schedule-btn').addEventListener('click', generateSchedule);
-        document.getElementById('secretary-close-btn').addEventListener('click', () => {
-            panel.style.display = 'none';
-        });
+        scrollToBottom();
     }
 
-    function prioritySelectStyle(priorityKey) {
-        const base = 'font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;border:none;cursor:pointer;font-family:"Plus Jakarta Sans",sans-serif;outline:none;';
-        return base + (PRIORITY_BADGE[priorityKey] || PRIORITY_BADGE.medium);
-    }
+    // ── Conversational chat: extract → confirm → save → redirect ─────────
+    async function callChatApi(userText) {
+        const history = getStoredMessages().slice(-6);
+        showTyping();
 
-    function showTaskPreview(tasks) {
-        ensureTaskPreview();
-        currentTasks = tasks.map(t => ({ ...t }));
-        const list = document.getElementById('secretary-task-list');
-        list.innerHTML = tasks.map((t, i) => {
-            const priorityKey = (t.priority_key || t.priority || 'medium').toLowerCase();
-            const duration = t.duration_minutes || t.duration || 30;
-            const time = t.time || '';
-            return `
-            <div style="display:flex; align-items:center; gap:10px; padding:8px 12px; background:white; border-radius:10px; flex-wrap:wrap;">
-                <select data-idx="${i}" data-field="priority" style="${prioritySelectStyle(priorityKey)}">
-                    <option value="high"   ${priorityKey === 'high'   ? 'selected' : ''}>High</option>
-                    <option value="medium" ${priorityKey === 'medium' ? 'selected' : ''}>Medium</option>
-                    <option value="low"    ${priorityKey === 'low'    ? 'selected' : ''}>Low</option>
-                </select>
-                <span style="font-size:14px; color:#1b1c19; flex:1; min-width:80px;">${escapeHtml(t.title || t.task)}</span>
-                <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-                    <input type="time" data-idx="${i}" data-field="time" value="${time}"
-                        title="Pin to a specific time (leave blank to auto-schedule)"
-                        style="font-size:12px; color:${time ? '#536346' : '#75786f'}; border:1px solid rgba(197,200,189,0.5); border-radius:6px; padding:2px 6px; font-family:'Plus Jakarta Sans',sans-serif;" />
-                    <button type="button" data-idx="${i}" data-time-auto title="Let Sanctuary choose the best open time"
-                        style="font-size:11px; color:#536346; border:1px solid rgba(148,166,132,0.35); border-radius:9999px; padding:4px 8px; background:#f5f3ee; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif;">Auto</button>
-                    <input type="number" data-idx="${i}" data-field="duration"
-                        value="${duration}" min="5" max="480"
-                        style="width:52px; font-size:12px; color:#75786f; border:1px solid rgba(197,200,189,0.5); border-radius:6px; padding:2px 6px; text-align:center; font-family:'Plus Jakarta Sans',sans-serif;" />
-                    <span style="font-size:11px; color:#75786f;">min</span>
-                </div>
-            </div>`;
-        }).join('');
-
-        list.querySelectorAll('[data-field]').forEach(el => {
-            el.addEventListener('change', () => {
-                const idx = parseInt(el.dataset.idx);
-                if (el.dataset.field === 'priority') {
-                    const val = el.value;
-                    currentTasks[idx].priority     = val.charAt(0).toUpperCase() + val.slice(1);
-                    currentTasks[idx].priority_key = val;
-                    el.style.cssText = prioritySelectStyle(val);
-                } else if (el.dataset.field === 'duration') {
-                    const val = Math.max(5, parseInt(el.value) || 30);
-                    currentTasks[idx].duration_minutes = val;
-                    currentTasks[idx].duration         = val;
-                    el.value = val;
-                } else if (el.dataset.field === 'time') {
-                    currentTasks[idx].time = el.value || null;
-                    el.style.color = el.value ? '#536346' : '#75786f';
-                }
-            });
-        });
-
-        list.querySelectorAll('[data-time-auto]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const idx = parseInt(btn.dataset.idx, 10);
-                const input = list.querySelector(`[data-field="time"][data-idx="${idx}"]`);
-                if (input) {
-                    input.value = '';
-                    input.style.color = '#75786f';
-                }
-                currentTasks[idx].time = null;
-            });
-        });
-
-        document.getElementById('secretary-task-preview').style.display = 'block';
-    }
-
-    function setStatus(msg) {
-        const el = document.getElementById('secretary-status');
-        if (!el) return;
-        el.textContent = msg;
-        el.style.display = msg ? 'block' : 'none';
-    }
-
-    // ── POST helpers ──────────────────────────────────────────────────────
-    async function postJSON(url, body) {
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
-            body: JSON.stringify(body),
-        });
-        return res.json();
-    }
-
-    async function parseAndSend(text) {
-        ensureTaskPreview();
         try {
-            const data = await postJSON('/parse-text/', { text, schedule_date: currentScheduleDate });
-            const tasks = data.data?.tasks || data.tasks || [];
-            if (tasks.length) {
-                showTaskPreview(tasks);
-                setStatus(`Found ${tasks.length} task${tasks.length !== 1 ? 's' : ''}. Set times and generate your schedule.`);
+            const res = await fetch('/chat/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+                body: JSON.stringify({ message: userText, history, pending_tasks: pendingTasks }),
+            });
+            const data = await res.json();
+            document.querySelectorAll('.typing-bubble').forEach(el => el.remove());
+
+            const reply = (data && data.reply) ? data.reply : "I'm having trouble responding right now.";
+            const msgs = getStoredMessages();
+            msgs.push({ type: 'text', role: 'assistant', text: reply, time: timeLabel() });
+            saveMessages(msgs);
+            renderMessages();
+
+            if (data.redirect) {
+                // User confirmed → schedule saved → go to timeline
+                pendingTasks = [];
+                setTimeout(() => { window.location.href = data.redirect; }, 1800);
             } else {
-                showTaskPreview([]);
-                setStatus(data.error || 'Could not parse tasks. Try listing one per line.');
+                // Store whatever tasks the AI returned (may be updated list or empty)
+                pendingTasks = (data.tasks && data.tasks.length > 0) ? data.tasks : [];
             }
-        } catch (e) {
-            setStatus('Network error — check your connection.');
+        } catch (_e) {
+            document.querySelectorAll('.typing-bubble').forEach(el => el.remove());
         }
+        scrollToBottom();
     }
 
-    async function generateSchedule() {
-        setStatus('Building your schedule…');
-        try {
-            const datedTasks = currentTasks.map(task => ({ ...task, schedule_date: task.schedule_date || currentScheduleDate }));
-            const data = await postJSON('/generate-schedule/', { tasks: datedTasks, schedule_date: currentScheduleDate });
-            const schedule = data.data?.schedule || data.schedule || [];
-            if (schedule.length) {
-                window.location.href = '/timeline/';
-            } else {
-                setStatus(data.error || 'Something went wrong generating the schedule.');
-            }
-        } catch (e) {
-            setStatus('Network error — could not generate schedule.');
-        }
+    // ── Image upload → vision → schedule → redirect to timeline ──────────
+    function showAssistantBubble(text) {
+        const msgs = getStoredMessages();
+        msgs.push({ type: 'text', role: 'assistant', text, time: timeLabel() });
+        saveMessages(msgs);
+        renderMessages();
+        scrollToBottom();
     }
 
-    // ── Image upload → backend ────────────────────────────────────────────
     async function uploadImageToBackend(file) {
-        ensureTaskPreview();
+        showTyping();
         const fd = new FormData();
         fd.append('image', file);
-        fd.append('schedule_date', currentScheduleDate);
+        fd.append('schedule_date', new Date().toISOString().slice(0, 10));
         try {
             const res = await fetch('/upload-image/', {
                 method: 'POST',
@@ -744,36 +607,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: fd,
             });
             const data = await res.json();
-            const tasks = data.data?.tasks || data.tasks || [];
-            if (tasks.length) {
-                showTaskPreview(tasks);
-                setStatus(`Extracted ${tasks.length} task${tasks.length !== 1 ? 's' : ''} from image.`);
+            document.querySelectorAll('.typing-bubble').forEach(el => el.remove());
+
+            if (data.redirect) {
+                showAssistantBubble("Got it! I've pulled your schedule from the image — setting it up now.");
+                setTimeout(() => { window.location.href = data.redirect; }, 1800);
             } else {
-                showTaskPreview([]);
-                setStatus(data.error || 'Could not extract tasks from image.');
+                const errMsg = data.error || "I couldn't make out a schedule from that image. Try a clearer photo, or just type it out and I'll sort it for you.";
+                showAssistantBubble(errMsg);
             }
         } catch (e) {
-            setStatus('Network error — image upload failed.');
+            document.querySelectorAll('.typing-bubble').forEach(el => el.remove());
+            showAssistantBubble("Something went wrong uploading that image. Please try again.");
         }
     }
 
-    // ── Intercept send: behaviour differs by mode ─────────────────────────
-    const _origSendMessage = window.sendMessage;
-    window.sendMessage = function(inputEl) {
-        const text = inputEl ? inputEl.value.trim() : '';
-        if (!text) return;
-        if (tasksMode) {
-            // Tasks mode: clear input and parse only — no chat bubble
-            inputEl.value = '';
-            inputEl.style.height = 'auto';
-            parseAndSend(text);
-        } else {
-            // Chat mode: normal bubble behaviour
-            if (_origSendMessage) _origSendMessage(inputEl);
-        }
-    };
-
-    // ── Intercept image inputs → also post to backend ─────────────────────
+    // ── Wire image / camera inputs ────────────────────────────────────────
     ['upload-input', 'camera-input'].forEach(id => {
         const inp = document.getElementById(id);
         if (!inp) return;

@@ -1,6 +1,6 @@
 {% extends 'base_auth.html' %}
 
-{% block title %}Join Sanctuary | Create Account{% endblock %}
+{% block title %}Join SecAI | Create Account{% endblock %}
 
 {% block content %}
 <div class="auth-wrapper" style="display:flex; width:100%;">
@@ -18,7 +18,7 @@
                 style="font-size:52px; color:#536346; display:block; margin-bottom:12px;">cloud_done</span>
             <h1
                 style="font-size:48px; font-weight:400; color:#536346; margin:0 0 12px; letter-spacing:-0.02em; line-height:1.1;">
-                Sanctuary</h1>
+                SecAI</h1>
             <p style="font-size:18px; color:#444840; margin:0; line-height:1.6;">Your calm companion in a busy world.
             </p>
         </div>
@@ -40,7 +40,7 @@
                 <span class="material-symbols-outlined"
                     style="font-size:32px; color:white; font-variation-settings:'FILL' 1;">spa</span>
             </div>
-            <span style="font-size:24px; font-weight:800; color:#536346;">Sanctuary</span>
+            <span style="font-size:24px; font-weight:800; color:#536346;">SecAI</span>
         </div>
 
         <!-- Form card -->
@@ -51,6 +51,17 @@
                 <h2 style="font-size:28px; font-weight:400; color:#1b1c19; margin:0 0 6px; line-height:1.2;">Create Account</h2>
                 <p style="font-size:15px; color:#444840; margin:0; line-height:1.5;">We're glad you're here. Let's begin your focus journey.</p>
             </div>
+
+            {% if messages %}
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+              {% for message in messages %}
+              <div style="background:{% if message.tags == 'error' %}#fee2e2{% else %}#e6f4ea{% endif %}; color:{% if message.tags == 'error' %}#991b1b{% else %}#137333{% endif %}; border-radius:12px; padding:12px 16px; font-size:14px; font-weight:500; display:flex; align-items:center; gap:8px;">
+                <span class="material-symbols-outlined" style="font-size:18px; flex-shrink:0;">{% if message.tags == 'error' %}error{% else %}check_circle{% endif %}</span>
+                {{ message }}
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
 
             <!-- Form -->
             <form method="post" action="{% url 'register' %}" style="display:flex; flex-direction:column; gap:10px;">
@@ -95,6 +106,11 @@
                             style="color:#536346; text-decoration:none; font-weight:600;">Privacy Policy</a>. I'm ready
                         for a more mindful experience.
                     </label>
+                </div>
+
+                <!-- Client-side error -->
+                <div id="client-error" style="display:none; background:#fee2e2; color:#991b1b; border-radius:12px; padding:12px 16px; font-size:14px; font-weight:500; align-items:center; gap:8px;">
+                    <span class="material-symbols-outlined" style="font-size:18px; flex-shrink:0;">error</span>
                 </div>
 
                 <!-- Submit -->
@@ -198,5 +214,25 @@
             icon.textContent = 'visibility';
         }
     }
+
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const terms = document.getElementById('terms').checked;
+        const errBox = document.getElementById('client-error');
+
+        let msg = '';
+        if (!name) msg = 'Please enter your full name.';
+        else if (!email) msg = 'Please enter your email address.';
+        else if (password.length < 6) msg = 'Password must be at least 6 characters.';
+        else if (!terms) msg = 'Please agree to the Terms of Service to continue.';
+
+        if (msg) {
+            e.preventDefault();
+            errBox.textContent = msg;
+            errBox.style.display = 'flex';
+        }
+    });
 </script>
 {% endblock %}

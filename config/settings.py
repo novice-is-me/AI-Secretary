@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'theme',
     'django_browser_reload',
     'scheduler',
+    'core',
 ]
 
 MIDDLEWARE = [
@@ -85,9 +86,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 TAILWIND_APP_NAME = 'theme'
 INTERNAL_IPS = ['127.0.0.1']
 
-LOGIN_URL = '/auth/login/'
-LOGIN_REDIRECT_URL = '/dashboard/'
-LOGOUT_REDIRECT_URL = '/auth/login/'
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/huddle/'
+LOGOUT_REDIRECT_URL = '/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -96,5 +97,14 @@ OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 AI_API_KEY = os.environ.get('AI_API_KEY', os.environ.get('OPENAI_API_KEY', ''))
 AI_BASE_URL = os.environ.get('AI_BASE_URL', None)
 AI_MODEL = os.environ.get('AI_MODEL', 'gpt-4o')
+
+# Vision model — auto-picks a vision-capable model based on provider if not set
+_vision_model_env = os.environ.get('AI_VISION_MODEL', '')
+if _vision_model_env:
+    AI_VISION_MODEL = _vision_model_env
+elif 'groq.com' in (AI_BASE_URL or ''):
+    AI_VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
+else:
+    AI_VISION_MODEL = AI_MODEL
 
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024

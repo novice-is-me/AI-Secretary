@@ -1,6 +1,6 @@
 {% extends 'base_auth.html' %}
 
-{% block title %}Sign In | Sanctuary{% endblock %}
+{% block title %}Sign In | SecAI{% endblock %}
 
 {% block content %}
 <div class="auth-wrapper" style="display:flex; width:100%;">
@@ -18,7 +18,7 @@
       <h1 style="font-size:48px; font-weight:700; line-height:1.1; letter-spacing:-0.02em; margin:0 0 12px;">
         Welcome back</h1>
       <p style="font-size:18px; line-height:1.6; opacity:0.9; max-width:400px; margin:0;">Return to your center.
-        Sanctuary is ready to help you navigate your day with clarity and calm.</p>
+        SecAI is ready to help you navigate your day with clarity and calm.</p>
     </div>
   </div>
 
@@ -45,7 +45,7 @@
           <span class="material-symbols-outlined"
             style="font-size:32px; color:white; font-variation-settings:'FILL' 1;">spa</span>
         </div>
-        <span style="font-size:24px; font-weight:800; color:#536346;">Sanctuary</span>
+        <span style="font-size:24px; font-weight:800; color:#536346;">SecAI</span>
       </div>
 
       <!-- Header -->
@@ -53,11 +53,18 @@
         <h2 style="font-size:32px; font-weight:600; color:#1b1c19; margin:0 0 8px; line-height:1.2;">Sign In
         </h2>
         <p style="font-size:16px; color:#444840; margin:0; line-height:1.6;">Continue your journey with
-          Sanctuary</p>
+          SecAI</p>
       </div>
 
+      {% if error %}
+      <div style="background:#fee2e2; color:#991b1b; border-radius:12px; padding:12px 16px; font-size:14px; font-weight:500; margin-bottom:20px; display:flex; align-items:center; gap:8px;">
+        <span class="material-symbols-outlined" style="font-size:18px; flex-shrink:0;">error</span>
+        {{ error }}
+      </div>
+      {% endif %}
+
       <!-- Form -->
-      <form method="post" action="/login/" style="display:flex; flex-direction:column; gap:20px;">
+      <form method="post" action="{% url 'login' %}" style="display:flex; flex-direction:column; gap:20px;">
         {% csrf_token %}
 
         <!-- Email -->
@@ -121,7 +128,7 @@
 
       <!-- Footer -->
       <p style="text-align:center; font-size:15px; color:#444840; margin:0;">
-        New to Sanctuary?
+        New to SecAI?
         <a href="{% url 'register' %}" style="color:#536346; font-weight:700; text-decoration:none;">Create an
           account</a>
       </p>

@@ -1,5 +1,5 @@
 {% extends 'base_auth.html' %}
-{% block title %}Profile | Sanctuary{% endblock %}
+{% block title %}Profile | SecAI{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -46,7 +46,7 @@
                 <span class="material-symbols-outlined" style="color:white; font-variation-settings:'FILL' 1;">spa</span>
             </div>
             <div>
-                <div style="font-size:22px; font-weight:600; color:#94A684; line-height:1.2;">Sanctuary</div>
+                <div style="font-size:22px; font-weight:600; color:#94A684; line-height:1.2;">SecAI</div>
                 <div style="font-size:10px; color:#75786f; letter-spacing:0.12em; text-transform:uppercase;">Calm Companion</div>
             </div>
         </div>
@@ -65,7 +65,7 @@
         <a href="{% url 'profile' %}" style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#f0eee9; border-radius:12px; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='#e4e2dd'" onmouseout="this.style.background='#f0eee9'">
             <img id="sidebarProfileImg" src="{{ profile_image_url }}" alt="{{ display_name }}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;" />
             <div style="display:flex; flex-direction:column;">
-                <span style="font-size:14px; font-weight:600; color:#1b1c19;">{{ display_name }}</span>
+                <span style="font-size:14px; font-weight:600; color:#1b1c19; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px; display:block;">{{ display_name }}</span>
             </div>
         </a>
         <form method="post" action="{% url 'logout' %}">
@@ -82,7 +82,7 @@
 <header class="prof-mobile-header" style="display:none; justify-content:space-between; align-items:center; padding:16px 24px; position:fixed; top:0; left:0; right:0; z-index:50; background:rgba(253,252,251,0.85); backdrop-filter:blur(12px);">
   <div style="display:flex; align-items:center; gap:8px;">
     <span class="material-symbols-outlined" style="color:#94A684; font-variation-settings:'FILL' 1;">spa</span>
-    <h1 style="font-size:20px; font-weight:700; color:#94A684; margin:0;">Sanctuary</h1>
+    <h1 style="font-size:20px; font-weight:700; color:#94A684; margin:0;">SecAI</h1>
   </div>
   <span class="material-symbols-outlined" style="color:#75786f;">account_circle</span>
 </header>
@@ -128,11 +128,19 @@
         <input type="hidden" id="avatarDataInput" name="avatar_data" value="" />
         <div>
           <label style="display:block; font-size:14px; font-weight:500; color:#75786f; margin-bottom:8px;">Full Name</label>
-          <input type="text" name="full_name" value="{{ display_name }}" style="width:100%; background:#f0eee9; border:none; border-radius:8px; padding:12px 16px; font-size:16px; color:#1b1c19; outline:none;" />
+          <input type="text" name="full_name" id="fullNameInput" value="{{ display_name }}" maxlength="60"
+            style="width:100%; box-sizing:border-box; background:#f0eee9; border:none; border-radius:8px; padding:12px 16px; font-size:16px; color:#1b1c19; outline:none;" />
+          <div style="text-align:right; margin-top:4px;">
+            <span id="fullNameCount" style="font-size:12px; color:#75786f;">{{ display_name|length }} / 60</span>
+          </div>
         </div>
         <div>
           <label style="display:block; font-size:14px; font-weight:500; color:#75786f; margin-bottom:8px;">Bio</label>
-          <textarea name="bio" rows="2" style="width:100%; background:#f0eee9; border:none; border-radius:8px; padding:12px 16px; font-size:16px; color:#1b1c19; outline:none; resize:none;">{{ profile.bio }}</textarea>
+          <textarea name="bio" id="bioInput" rows="2" maxlength="160"
+            style="width:100%; box-sizing:border-box; background:#f0eee9; border:none; border-radius:8px; padding:12px 16px; font-size:16px; color:#1b1c19; outline:none; resize:none;">{{ profile.bio }}</textarea>
+          <div style="text-align:right; margin-top:4px;">
+            <span id="bioCount" style="font-size:12px; color:#75786f;">{{ profile.bio|length }} / 160</span>
+          </div>
         </div>
         <div>
           <label style="display:block; font-size:14px; font-weight:500; color:#75786f; margin-bottom:8px;">Email</label>
@@ -158,7 +166,7 @@
           </div>
           <div>
             <h3 style="font-size:18px; font-weight:500; color:#1b1c19; margin:0 0 8px;">Calendar Integration</h3>
-            <p style="font-size:14px; color:#75786f; margin:0; line-height:1.6; max-width:280px;">Connect Google Calendar and Outlook to sync your schedule with Sanctuary.</p>
+            <p style="font-size:14px; color:#75786f; margin:0; line-height:1.6; max-width:280px;">Connect Google Calendar and Outlook to sync your schedule with SecAI.</p>
           </div>
           <span style="background:#f0eee9; color:#536346; padding:6px 16px; border-radius:9999px; font-size:12px; font-weight:600;">Coming Soon</span>
         </div>
@@ -200,6 +208,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const editProfilePicBtn = document.getElementById('editProfilePicBtn');
     const profileImageInput = document.getElementById('profileImageInput');
     const avatarDataInput = document.getElementById('avatarDataInput');
+
+    // Character counters
+    function wireCounter(inputId, counterId, max) {
+        const input = document.getElementById(inputId);
+        const counter = document.getElementById(counterId);
+        if (!input || !counter) return;
+        input.addEventListener('input', () => {
+            const len = input.value.length;
+            counter.textContent = `${len} / ${max}`;
+            counter.style.color = len >= max ? '#dc2626' : len >= max * 0.85 ? '#ca8a04' : '#75786f';
+        });
+    }
+    wireCounter('fullNameInput', 'fullNameCount', 60);
+    wireCounter('bioInput', 'bioCount', 160);
 
     // Trigger file input when edit button is clicked
     if (editProfilePicBtn && profileImageInput) {
