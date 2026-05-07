@@ -1,7 +1,9 @@
-import json
-from datetime import date
+from datetime import date, time as dtime
 
+from django.contrib import messages
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
@@ -19,11 +21,15 @@ def dashboard(request):
         .prefetch_related('tasks')
         .first()
     )
+    total_count = 0
     completed_count = 0
     if latest_session:
-        completed_count = latest_session.tasks.filter(is_completed=True).count()
+        all_tasks = list(latest_session.tasks.all())
+        total_count = len(all_tasks)
+        completed_count = sum(1 for t in all_tasks if t.is_completed)
     return render(request, 'scheduler/dashboard.html', {
         'session': latest_session,
+        'total_count': total_count,
         'completed_count': completed_count,
     })
 
@@ -35,31 +41,32 @@ def generate_schedule(request):
     image_file = request.FILES.get('schedule_image')
 
     if not raw_text and not image_file:
-        return JsonResponse({'error': 'Please provide text or an image.'}, status=400)
+        messages.error(request, 'Please enter some tasks or upload a screenshot.')
+        return redirect('dashboard')
 
-    # OCR path
     if image_file and not raw_text:
         try:
             raw_text = extract_text_from_image(image_file)
         except Exception as e:
-            return JsonResponse({'error': f'OCR failed: {str(e)}'}, status=500)
+            messages.error(request, f'Could not read your image. Try typing your tasks instead. ({e})')
+            return redirect('dashboard')
 
     if not raw_text:
-        return JsonResponse({'error': 'Could not extract text from image.'}, status=400)
+        messages.error(request, 'No text could be extracted from the image.')
+        return redirect('dashboard')
 
-    # Parse tasks via GPT
     try:
         parsed_tasks = parse_tasks_from_text(raw_text)
     except Exception as e:
-        return JsonResponse({'error': f'AI parsing failed: {str(e)}'}, status=500)
+        messages.error(request, f'AI parsing failed: {e}')
+        return redirect('dashboard')
 
     if not parsed_tasks:
-        return JsonResponse({'error': 'No tasks found in your input.'}, status=400)
+        messages.error(request, 'No tasks found in your input. Try being more specific.')
+        return redirect('dashboard')
 
-    # Build schedule
     scheduled = build_schedule(parsed_tasks)
 
-    # Persist to DB
     session = ScheduleSession.objects.create(
         user=request.user,
         raw_input=raw_text,
@@ -70,22 +77,20 @@ def generate_schedule(request):
         session.save()
 
     for item in scheduled:
-        from datetime import time as dtime
         fixed_time = None
         if item.get('fixed_time'):
             try:
-                parts = item['fixed_time'].split(':')
-                fixed_time = dtime(int(parts[0]), int(parts[1]))
+                h, m = item['fixed_time'].split(':')
+                fixed_time = dtime(int(h), int(m))
             except (ValueError, IndexError):
                 pass
 
-        sched_start = None
-        sched_end = None
+        sched_start = sched_end = None
         try:
-            parts = item['scheduled_start'].split(':')
-            sched_start = dtime(int(parts[0]), int(parts[1]))
-            parts = item['scheduled_end'].split(':')
-            sched_end = dtime(int(parts[0]), int(parts[1]))
+            h, m = item['scheduled_start'].split(':')
+            sched_start = dtime(int(h), int(m))
+            h, m = item['scheduled_end'].split(':')
+            sched_end = dtime(int(h), int(m))
         except (ValueError, IndexError, AttributeError):
             pass
 
@@ -117,7 +122,11 @@ def toggle_task(request, task_id):
 @require_POST
 def reshuffle(request, session_id):
     session = get_object_or_404(ScheduleSession, id=session_id, user=request.user)
-    incomplete_tasks = session.tasks.filter(is_completed=False)
+    incomplete_tasks = list(session.tasks.filter(is_completed=False))
+
+    if not incomplete_tasks:
+        messages.info(request, 'All tasks are already completed!')
+        return redirect('dashboard')
 
     tasks_data = [
         {
@@ -130,22 +139,17 @@ def reshuffle(request, session_id):
         for t in incomplete_tasks
     ]
 
-    if not tasks_data:
-        return redirect('dashboard')
-
     rescheduled = reshuffle_schedule(tasks_data)
 
-    # Update task times in place
     task_map = {t.title: t for t in incomplete_tasks}
     for i, item in enumerate(rescheduled):
         task = task_map.get(item['title'])
         if task:
-            from datetime import time as dtime
             try:
-                parts = item['scheduled_start'].split(':')
-                task.scheduled_start = dtime(int(parts[0]), int(parts[1]))
-                parts = item['scheduled_end'].split(':')
-                task.scheduled_end = dtime(int(parts[0]), int(parts[1]))
+                h, m = item['scheduled_start'].split(':')
+                task.scheduled_start = dtime(int(h), int(m))
+                h, m = item['scheduled_end'].split(':')
+                task.scheduled_end = dtime(int(h), int(m))
                 task.order = i
                 task.save()
             except (ValueError, IndexError):
@@ -154,4 +158,19 @@ def reshuffle(request, session_id):
     session.is_reshuffled = True
     session.save()
 
+    messages.success(request, 'Schedule reshuffled from now!')
     return redirect('dashboard')
+
+
+def register(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('dashboard')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/register.html', {'form': form})

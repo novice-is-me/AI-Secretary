@@ -13,7 +13,8 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8000/)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8000/auth/login/)",
       "Bash(kill %1)",
-      "Bash(curl -sL -o /dev/null -w \"%{url_effective} %{http_code}\\\\n\" http://127.0.0.1:8000/)"
+      "Bash(curl -sL -o /dev/null -w \"%{url_effective} %{http_code}\\\\n\" http://127.0.0.1:8000/)",
+      "WebSearch"
     ]
   }
 }
