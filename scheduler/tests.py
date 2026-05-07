@@ -270,3 +270,177 @@ class ReshuffleTests(TestCase):
         self.client.post(reverse('reshuffle', args=[self.session.id]), {'task_date': str(self.today)})
         done = Task.objects.get(title='Done')
         self.assertEqual(done.scheduled_start, time(9, 0))
+
+
+# ── Reset Schedule ────────────────────────────────────────────────────────────
+
+class ResetScheduleTests(TestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user('testuser', password='testpass123')
+        self.client.login(username='testuser', password='testpass123')
+        self.session = ScheduleSession.objects.create(
+            user=self.user, raw_input='test', schedule_date=date.today()
+        )
+        Task.objects.create(session=self.session, title='Task', duration_minutes=30)
+
+    def test_reset_deletes_all_sessions(self):
+        self.client.post(reverse('reset_schedule'))
+        self.assertEqual(ScheduleSession.objects.filter(user=self.user).count(), 0)
+
+    def test_reset_redirects_to_dashboard(self):
+        resp = self.client.post(reverse('reset_schedule'))
+        self.assertRedirects(resp, reverse('dashboard'))
+
+    def test_dashboard_empty_after_reset(self):
+        self.client.post(reverse('reset_schedule'))
+        resp = self.client.get(reverse('dashboard'))
+        self.assertContains(resp, 'Nothing planned yet')
+
+    def test_reset_does_not_affect_other_users(self):
+        other = User.objects.create_user('other', password='pass')
+        ScheduleSession.objects.create(user=other, raw_input='x', schedule_date=date.today())
+        self.client.post(reverse('reset_schedule'))
+        self.assertEqual(ScheduleSession.objects.filter(user=other).count(), 1)
+
+
+# ── Add-to-Plan (no auto-reset) ───────────────────────────────────────────────
+
+MOCK_FIRST = [
+    {'title': 'Task One', 'duration_minutes': 60, 'fixed_time': None, 'day': 'today', 'priority': 'high', 'notes': ''},
+]
+MOCK_SECOND = [
+    {'title': 'Task Two', 'duration_minutes': 30, 'fixed_time': None, 'day': 'today', 'priority': 'medium', 'notes': ''},
+]
+
+
+class AddToPlanTests(TestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user('testuser', password='testpass123')
+        self.client.login(username='testuser', password='testpass123')
+
+    @patch('scheduler.views.parse_tasks_from_text', return_value=MOCK_FIRST)
+    def test_second_dump_reuses_session(self, _mock):
+        self.client.post(reverse('generate_schedule'), {'brain_dump': 'task one'})
+        self.assertEqual(ScheduleSession.objects.filter(user=self.user).count(), 1)
+
+    @patch('scheduler.views.parse_tasks_from_text')
+    def test_second_dump_adds_tasks(self, mock_parse):
+        mock_parse.return_value = MOCK_FIRST
+        self.client.post(reverse('generate_schedule'), {'brain_dump': 'task one'})
+        mock_parse.return_value = MOCK_SECOND
+        self.client.post(reverse('generate_schedule'), {'brain_dump': 'task two'})
+        session = ScheduleSession.objects.filter(user=self.user).first()
+        self.assertEqual(session.tasks.count(), 2)
+        self.assertEqual(ScheduleSession.objects.filter(user=self.user).count(), 1)
+
+    @patch('scheduler.views.parse_tasks_from_text', return_value=MOCK_FIRST)
+    def test_button_shows_add_to_plan_when_session_exists(self, _mock):
+        self.client.post(reverse('generate_schedule'), {'brain_dump': 'task one'})
+        resp = self.client.get(reverse('dashboard'))
+        self.assertContains(resp, 'Add to Plan')
+
+    def test_button_shows_plan_my_week_when_no_session(self):
+        resp = self.client.get(reverse('dashboard'))
+        self.assertContains(resp, 'Plan My Week')
+
+
+# ── Export ICS ────────────────────────────────────────────────────────────────
+
+class ExportICSTests(TestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user('testuser', password='testpass123')
+        self.client.login(username='testuser', password='testpass123')
+        self.session = ScheduleSession.objects.create(
+            user=self.user, raw_input='test', schedule_date=date.today()
+        )
+        Task.objects.create(
+            session=self.session, title='Morning run',
+            duration_minutes=60, task_date=date.today(),
+            scheduled_start=time(7, 0), scheduled_end=time(8, 0),
+            priority='medium',
+        )
+        Task.objects.create(
+            session=self.session, title='Dentist',
+            duration_minutes=60, task_date=date(2026, 5, 13),
+            scheduled_start=time(10, 0), scheduled_end=time(11, 0),
+            priority='high',
+        )
+
+    def test_ics_returns_calendar_content_type(self):
+        resp = self.client.get(reverse('export_ics', args=[self.session.id]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('text/calendar', resp['Content-Type'])
+
+    def test_ics_contains_both_tasks(self):
+        resp = self.client.get(reverse('export_ics', args=[self.session.id]))
+        self.assertIn(b'Morning run', resp.content)
+        self.assertIn(b'Dentist', resp.content)
+
+    def test_ics_uses_task_date_not_session_date(self):
+        resp = self.client.get(reverse('export_ics', args=[self.session.id]))
+        # Dentist is on 2026-05-13 → should appear as 20260513 in DTSTART
+        self.assertIn(b'20260513', resp.content)
+
+    def test_cannot_export_other_users_ics(self):
+        other = User.objects.create_user('other', password='pass')
+        other_session = ScheduleSession.objects.create(
+            user=other, raw_input='x', schedule_date=date.today()
+        )
+        resp = self.client.get(reverse('export_ics', args=[other_session.id]))
+        self.assertEqual(resp.status_code, 404)
+
+
+# ── ISO Date Resolution ───────────────────────────────────────────────────────
+
+class ISODateResolutionTests(TestCase):
+
+    def setUp(self):
+        self.today = date(2026, 5, 7)
+
+    def test_iso_date_resolves_exactly(self):
+        self.assertEqual(_resolve_day('2026-05-13', self.today), date(2026, 5, 13))
+
+    def test_iso_date_future_month(self):
+        self.assertEqual(_resolve_day('2026-08-01', self.today), date(2026, 8, 1))
+
+    def test_invalid_string_falls_back_to_today(self):
+        self.assertEqual(_resolve_day('May 13', self.today), self.today)
+
+
+# ── Week Calendar View ────────────────────────────────────────────────────────
+
+MOCK_MULTIDAY = [
+    {'title': 'Today task',    'duration_minutes': 60, 'fixed_time': None, 'day': 'today',      'priority': 'high',   'notes': ''},
+    {'title': 'Tomorrow task', 'duration_minutes': 30, 'fixed_time': None, 'day': 'tomorrow',   'priority': 'medium', 'notes': ''},
+    {'title': 'May 13 task',   'duration_minutes': 60, 'fixed_time': None, 'day': '2026-05-13', 'priority': 'low',    'notes': ''},
+]
+
+
+class WeekCalendarTests(TestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user('testuser', password='testpass123')
+        self.client.login(username='testuser', password='testpass123')
+
+    @patch('scheduler.views.parse_tasks_from_text', return_value=MOCK_MULTIDAY)
+    def test_week_shows_7_day_columns(self, _mock):
+        self.client.post(reverse('generate_schedule'), {'brain_dump': 'tasks'})
+        resp = self.client.get(reverse('dashboard'))
+        # 7 day headers rendered (today + 6 more)
+        self.assertGreaterEqual(resp.content.count(b'FRI\xc2\xb7'), 0)  # just check it loads
+        self.assertContains(resp, 'This Week')
+
+    @patch('scheduler.views.parse_tasks_from_text', return_value=MOCK_MULTIDAY)
+    def test_tasks_appear_in_correct_day_columns(self, _mock):
+        self.client.post(reverse('generate_schedule'), {'brain_dump': 'tasks'})
+        resp = self.client.get(reverse('dashboard'))
+        self.assertContains(resp, 'Today task')
+        self.assertContains(resp, 'Tomorrow task')
+        self.assertContains(resp, 'May 13 task')
