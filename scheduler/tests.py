@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date, time, timedelta
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
@@ -7,6 +7,7 @@ from django.urls import reverse
 
 from .models import ScheduleSession, Task
 from .services.scheduler_service import build_schedule, reshuffle_schedule
+from .views import _resolve_day
 
 
 # ── Scheduling Engine ────────────────────────────────────────────────────────
@@ -58,6 +59,44 @@ class SchedulerServiceTests(TestCase):
         self.assertEqual(build_schedule([]), [])
 
 
+# ── Day Resolution ────────────────────────────────────────────────────────────
+
+class DayResolutionTests(TestCase):
+
+    def setUp(self):
+        # Use a fixed Thursday for reproducible tests
+        self.thursday = date(2026, 5, 7)  # Thursday
+
+    def test_today_resolves_to_today(self):
+        self.assertEqual(_resolve_day('today', self.thursday), self.thursday)
+
+    def test_none_resolves_to_today(self):
+        self.assertEqual(_resolve_day(None, self.thursday), self.thursday)
+
+    def test_tomorrow_resolves_correctly(self):
+        self.assertEqual(_resolve_day('tomorrow', self.thursday), self.thursday + timedelta(days=1))
+
+    def test_named_weekday_resolves_to_next_occurrence(self):
+        # Thursday → next Tuesday is 5 days away
+        result = _resolve_day('Tuesday', self.thursday)
+        self.assertEqual(result.weekday(), 1)  # 1 = Tuesday
+        self.assertGreater(result, self.thursday)
+
+    def test_same_weekday_resolves_to_today(self):
+        # Thursday → Thursday = same day (0 days ahead)
+        result = _resolve_day('Thursday', self.thursday)
+        self.assertEqual(result, self.thursday)
+
+    def test_upcoming_weekday_this_week(self):
+        # Thursday → Saturday is 2 days ahead
+        result = _resolve_day('Saturday', self.thursday)
+        self.assertEqual(result, self.thursday + timedelta(days=2))
+
+    def test_next_prefix_ignored_gracefully(self):
+        result = _resolve_day('next Monday', self.thursday)
+        self.assertEqual(result.weekday(), 0)  # 0 = Monday
+
+
 # ── Auth ─────────────────────────────────────────────────────────────────────
 
 class AuthTests(TestCase):
@@ -99,9 +138,15 @@ class AuthTests(TestCase):
 # ── Generate Schedule ─────────────────────────────────────────────────────────
 
 MOCK_TASKS = [
-    {'title': 'Write report', 'duration_minutes': 60, 'fixed_time': None, 'priority': 'high', 'notes': ''},
-    {'title': '3pm meeting', 'duration_minutes': 30, 'fixed_time': '15:00', 'priority': 'high', 'notes': ''},
-    {'title': 'Reply emails', 'duration_minutes': 30, 'fixed_time': None, 'priority': 'medium', 'notes': ''},
+    {'title': 'Write report', 'duration_minutes': 60, 'fixed_time': None, 'day': 'today', 'priority': 'high', 'notes': ''},
+    {'title': '3pm meeting', 'duration_minutes': 30, 'fixed_time': '15:00', 'day': 'today', 'priority': 'high', 'notes': ''},
+    {'title': 'Reply emails', 'duration_minutes': 30, 'fixed_time': None, 'day': 'today', 'priority': 'medium', 'notes': ''},
+]
+
+MOCK_TASKS_MULTIDAY = [
+    {'title': 'Write report', 'duration_minutes': 60, 'fixed_time': None, 'day': 'today', 'priority': 'high', 'notes': ''},
+    {'title': 'Dentist', 'duration_minutes': 60, 'fixed_time': '14:00', 'day': 'Tuesday', 'priority': 'high', 'notes': ''},
+    {'title': 'Clean house', 'duration_minutes': 120, 'fixed_time': None, 'day': 'Saturday', 'priority': 'medium', 'notes': ''},
 ]
 
 
@@ -128,12 +173,25 @@ class GenerateScheduleTests(TestCase):
         self.client.post(reverse('generate_schedule'), {'brain_dump': 'tasks'})
         resp = self.client.get(reverse('dashboard'))
         self.assertContains(resp, 'Write report')
-        self.assertContains(resp, 'Your Daily Roadmap')
 
     @patch('scheduler.views.parse_tasks_from_text', side_effect=Exception('API error'))
     def test_ai_failure_shows_friendly_error(self, _mock):
         resp = self.client.post(reverse('generate_schedule'), {'brain_dump': 'tasks'}, follow=True)
         self.assertContains(resp, 'AI parsing failed')
+
+    @patch('scheduler.views.parse_tasks_from_text', return_value=MOCK_TASKS_MULTIDAY)
+    def test_multiday_tasks_get_correct_dates(self, _mock):
+        self.client.post(reverse('generate_schedule'), {'brain_dump': 'report, dentist Tuesday, clean house Saturday'})
+        session = ScheduleSession.objects.filter(user=self.user).first()
+        self.assertEqual(session.tasks.count(), 3)
+        dates = set(session.tasks.values_list('task_date', flat=True))
+        self.assertEqual(len(dates), 3)  # Three different dates
+
+    @patch('scheduler.views.parse_tasks_from_text', return_value=MOCK_TASKS_MULTIDAY)
+    def test_dashboard_shows_day_tabs_for_multiday(self, _mock):
+        self.client.post(reverse('generate_schedule'), {'brain_dump': 'tasks'})
+        resp = self.client.get(reverse('dashboard'))
+        self.assertContains(resp, 'Today')  # Tab for today
 
 
 # ── Toggle Task ───────────────────────────────────────────────────────────────
@@ -149,6 +207,7 @@ class ToggleTaskTests(TestCase):
         )
         self.task = Task.objects.create(
             session=self.session, title='Test task', duration_minutes=30,
+            task_date=date.today(),
             scheduled_start=time(9, 0), scheduled_end=time(9, 30),
         )
 
@@ -181,30 +240,33 @@ class ReshuffleTests(TestCase):
         self.client = Client()
         self.user = User.objects.create_user('testuser', password='testpass123')
         self.client.login(username='testuser', password='testpass123')
+        self.today = date.today()
         self.session = ScheduleSession.objects.create(
-            user=self.user, raw_input='test', schedule_date=date.today()
+            user=self.user, raw_input='test', schedule_date=self.today
         )
         Task.objects.create(
             session=self.session, title='Done', duration_minutes=30,
+            task_date=self.today,
             scheduled_start=time(9, 0), scheduled_end=time(9, 30), is_completed=True,
         )
         Task.objects.create(
             session=self.session, title='Pending', duration_minutes=60,
+            task_date=self.today,
             scheduled_start=time(9, 30), scheduled_end=time(10, 30),
         )
 
     def test_reshuffle_updates_pending_times(self):
         original_start = Task.objects.get(title='Pending').scheduled_start
-        self.client.post(reverse('reshuffle', args=[self.session.id]))
+        self.client.post(reverse('reshuffle', args=[self.session.id]), {'task_date': str(self.today)})
         new_start = Task.objects.get(title='Pending').scheduled_start
         self.assertNotEqual(original_start, new_start)
 
     def test_reshuffle_marks_session_flag(self):
-        self.client.post(reverse('reshuffle', args=[self.session.id]))
+        self.client.post(reverse('reshuffle', args=[self.session.id]), {'task_date': str(self.today)})
         self.session.refresh_from_db()
         self.assertTrue(self.session.is_reshuffled)
 
     def test_completed_tasks_not_moved(self):
-        self.client.post(reverse('reshuffle', args=[self.session.id]))
+        self.client.post(reverse('reshuffle', args=[self.session.id]), {'task_date': str(self.today)})
         done = Task.objects.get(title='Done')
         self.assertEqual(done.scheduled_start, time(9, 0))

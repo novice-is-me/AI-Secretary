@@ -4,66 +4,96 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login — AI Secretary</title>
+    <title>Sign in — SecAI</title>
     {% tailwind_css %}
   </head>
-  <body class="bg-gradient-to-br from-indigo-50 to-white min-h-screen flex items-center justify-center">
-    <div class="w-full max-w-sm">
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-indigo-600">AI Secretary</h1>
-        <p class="text-gray-500 mt-1 text-sm">Your intelligent daily planner</p>
+  <body class="bg-stone-50 min-h-screen flex">
+
+    <!-- Left panel — brand -->
+    <div class="hidden lg:flex flex-col justify-between w-2/5 bg-violet-600 p-12 text-white">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <span class="font-bold text-lg tracking-tight">SecAI</span>
       </div>
 
-      <div class="bg-white rounded-2xl shadow-md p-8">
-        <h2 class="text-xl font-semibold text-gray-800 mb-6">Sign in to your account</h2>
+      <div>
+        <blockquote class="text-3xl font-semibold leading-snug mb-4">
+          Stop juggling tasks in your head.<br/>Let SecAI carry the load.
+        </blockquote>
+        <p class="text-violet-200 text-sm leading-relaxed">
+          Just tell SecAI what's on your mind — in plain words, no formatting needed.
+          It handles the rest: parsing, prioritising, and building a realistic hour-by-hour plan for your day.
+        </p>
+      </div>
+
+      <div class="flex flex-col gap-3 text-sm text-violet-200">
+        <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-violet-300"></span>Brain dump in seconds</div>
+        <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-violet-300"></span>AI-crafted hourly schedule</div>
+        <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-violet-300"></span>Re-plan the rest of your day, any time</div>
+      </div>
+    </div>
+
+    <!-- Right panel — form -->
+    <div class="flex-1 flex items-center justify-center px-8">
+      <div class="w-full max-w-sm">
+        <!-- Mobile logo -->
+        <div class="flex items-center gap-2 mb-8 lg:hidden">
+          <div class="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <span class="font-bold text-stone-900 tracking-tight">SecAI</span>
+        </div>
+
+        <h1 class="text-2xl font-bold text-stone-900 mb-1">Welcome back</h1>
+        <p class="text-sm text-stone-500 mb-8">Your day is waiting to be planned.</p>
 
         {% if form.errors %}
-          <div class="mb-4 px-4 py-3 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm">
-            Invalid username or password.
+          <div class="mb-5 px-4 py-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-sm">
+            Wrong username or password. Give it another try.
           </div>
         {% endif %}
 
-        <form method="post">
+        <form method="post" class="space-y-4">
           {% csrf_token %}
-          <div class="mb-4">
-            <label for="id_username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+          <div>
+            <label for="id_username" class="block text-sm font-medium text-stone-700 mb-1.5">Username</label>
             <input
-              type="text"
-              name="username"
-              id="id_username"
-              autocomplete="username"
-              autofocus
-              required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
-              placeholder="Enter your username"
+              type="text" name="username" id="id_username"
+              autocomplete="username" autofocus required
+              class="w-full px-4 py-2.5 border border-stone-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+              placeholder="Your username"
             />
           </div>
-          <div class="mb-6">
-            <label for="id_password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <div>
+            <label for="id_password" class="block text-sm font-medium text-stone-700 mb-1.5">Password</label>
             <input
-              type="password"
-              name="password"
-              id="id_password"
-              autocomplete="current-password"
-              required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
-              placeholder="Enter your password"
+              type="password" name="password" id="id_password"
+              autocomplete="current-password" required
+              class="w-full px-4 py-2.5 border border-stone-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+              placeholder="Your password"
             />
           </div>
           <input type="hidden" name="next" value="{{ next }}" />
           <button
             type="submit"
-            class="w-full bg-indigo-600 text-white font-medium py-2.5 rounded-lg hover:bg-indigo-700 transition-colors text-sm"
+            class="w-full bg-violet-600 text-white font-semibold py-2.5 rounded-xl hover:bg-violet-700 active:scale-95 transition-all text-sm mt-2"
           >
             Sign In
           </button>
         </form>
-      </div>
 
-      <p class="text-center text-xs text-gray-400 mt-6">
-        No account?
-        <a href="{% url 'register' %}" class="text-indigo-500 hover:underline">Create one free</a>
-      </p>
+        <p class="text-center text-xs text-stone-400 mt-6">
+          Don't have an account?
+          <a href="{% url 'register' %}" class="text-violet-500 hover:text-violet-700 font-medium">Create one free</a>
+        </p>
+      </div>
     </div>
+
   </body>
 </html>

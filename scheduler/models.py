@@ -31,6 +31,7 @@ class Task(models.Model):
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
     notes = models.TextField(blank=True)
 
+    task_date = models.DateField(null=True, blank=True)
     scheduled_start = models.TimeField(null=True, blank=True)
     scheduled_end = models.TimeField(null=True, blank=True)
 

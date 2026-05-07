@@ -1,75 +1,98 @@
 {% extends "base.html" %}
+{% load scheduler_tags %}
 
-{% block title %}Dashboard — AI Secretary{% endblock %}
+{% block title %}Dashboard — SecAI{% endblock %}
 
 {% block content %}
-<div class="space-y-8">
+<div class="space-y-6">
 
-  <!-- Header -->
-  <div class="flex items-center justify-between">
+  <!-- Greeting header -->
+  <div class="flex items-start justify-between">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">Good day, {{ user.username }} 👋</h1>
-      <p class="text-sm text-gray-500 mt-0.5">What's on your plate today?</p>
+      <p class="text-xs font-medium text-violet-500 uppercase tracking-widest mb-1" id="time-context">Today</p>
+      <h1 class="text-2xl font-bold text-stone-900" id="greeting-line">Good to see you, {{ user.username }}.</h1>
+      <p class="text-sm text-stone-500 mt-0.5">
+        {% if session %}
+          {{ completed_count }} of {{ total_count }} done across {{ day_plans|length }} day{{ day_plans|length|pluralize }}.
+        {% else %}
+          Nothing planned yet. Let's fix that.
+        {% endif %}
+      </p>
     </div>
+
     {% if session %}
-      <form method="post" action="{% url 'reshuffle' session.id %}">
-        {% csrf_token %}
+      <div class="flex items-center gap-2 mt-1">
         <button
-          type="submit"
-          class="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          title="Re-calculate your remaining schedule from now"
+          onclick="document.getElementById('gcal-modal').classList.remove('hidden')"
+          class="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-stone-200 text-stone-600 hover:border-violet-300 hover:text-violet-600 transition-colors bg-white shadow-sm"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
-          Re-shuffle
+          Add to Calendar
         </button>
-      </form>
+      </div>
     {% endif %}
   </div>
 
-  <!-- Brain Dump Input -->
-  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-    <h2 class="text-base font-semibold text-gray-800 mb-1">Brain Dump</h2>
-    <p class="text-xs text-gray-500 mb-4">Type your tasks freely — or upload a screenshot. AI will parse and schedule everything.</p>
+  <!-- Brain Dump card -->
+  <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-6">
+    <div class="flex items-start justify-between mb-3">
+      <div>
+        <h2 class="text-sm font-semibold text-stone-800">Brain Dump</h2>
+        <p class="text-xs text-stone-400 mt-0.5">
+          {% if session %}
+            Add more tasks to your week — they'll be dropped into the right days. To start over, hit Reset.
+          {% else %}
+            What's on your plate this week? Dump it all in one go — tasks, errands, appointments. Mention the day when it matters.
+          {% endif %}
+        </p>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        {% if session %}
+          <form method="post" action="{% url 'reset_schedule' %}" onsubmit="return confirm('This will clear your entire plan. Are you sure?')">
+            {% csrf_token %}
+            <button
+              type="submit"
+              class="text-xs font-medium px-3 py-1.5 rounded-lg border border-red-200 text-red-400 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
+            >
+              Reset plan
+            </button>
+          </form>
+        {% endif %}
+        <span class="text-xs text-stone-400 bg-stone-100 px-2 py-1 rounded-md font-mono">AI-powered</span>
+      </div>
+    </div>
 
-    <form
-      method="post"
-      action="{% url 'generate_schedule' %}"
-      enctype="multipart/form-data"
-      id="brain-dump-form"
-    >
+    <form method="post" action="{% url 'generate_schedule' %}" enctype="multipart/form-data" id="brain-dump-form">
       {% csrf_token %}
-
       <textarea
         name="brain_dump"
         id="brain_dump"
-        rows="5"
-        placeholder="e.g. Send report to John, 3pm team call, finish slide deck, gym session, reply to all emails, buy groceries after 6pm..."
-        class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition placeholder-gray-400"
+        rows="4"
+        placeholder="e.g. finish the Q2 report, dentist on Tuesday at 3pm, clean house on Saturday, gym tomorrow, call mum at 7..."
+        class="w-full px-4 py-3 border border-stone-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition placeholder-stone-400 bg-stone-50 focus:bg-white"
       ></textarea>
 
-      <div class="mt-3 flex items-center gap-4 flex-wrap">
-        <!-- Image upload -->
+      <div class="mt-3 flex items-center gap-3 flex-wrap">
         <label
           for="schedule_image"
-          class="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 cursor-pointer hover:border-indigo-400 hover:text-indigo-500 transition"
-          id="image-label"
+          class="flex items-center gap-1.5 px-3 py-2 border border-dashed border-stone-300 rounded-lg text-xs text-stone-500 cursor-pointer hover:border-violet-400 hover:text-violet-500 transition bg-white"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
           <span id="image-label-text">Upload screenshot</span>
         </label>
-        <input type="file" name="schedule_image" id="schedule_image" accept="image/*" class="hidden" />
+        <input type="file" name="schedule_image" id="schedule_image" accept="image/*" class="hidden"/>
 
         <button
           type="submit"
           id="submit-btn"
-          class="ml-auto flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors disabled:opacity-60"
+          class="ml-auto flex items-center gap-2 bg-violet-600 hover:bg-violet-700 active:scale-95 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-all shadow-sm"
         >
-          <span id="btn-text">Generate Schedule</span>
-          <svg id="btn-spinner" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hidden animate-spin" fill="none" viewBox="0 0 24 24">
+          <span id="btn-text">{% if session %}Add to Plan{% else %}Plan My Week{% endif %}</span>
+          <svg id="btn-spinner" class="w-4 h-4 hidden animate-spin" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 12 0 12 12H4z"></path>
           </svg>
@@ -78,147 +101,420 @@
     </form>
   </div>
 
-  <!-- Schedule Display -->
-  {% if session %}
-    <div>
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-base font-semibold text-gray-800">
-          Your Daily Roadmap
+  <!-- Week Calendar -->
+  {% if day_plans %}
+    <div class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+
+      <!-- Top bar: legend -->
+      <div class="flex items-center justify-between px-5 py-3 border-b border-stone-100">
+        <div class="flex items-center gap-2.5">
+          <h2 class="text-sm font-semibold text-stone-800">This Week</h2>
           {% if session.is_reshuffled %}
-            <span class="ml-2 text-xs font-normal bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">reshuffled</span>
+            <span class="text-xs bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full font-medium">re-planned</span>
           {% endif %}
-        </h2>
-        <span class="text-xs text-gray-400">{{ session.schedule_date }}</span>
+        </div>
+        <div class="flex items-center gap-3.5 text-xs text-stone-400">
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-400"></span>Urgent</span>
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400"></span>Important</span>
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>Flexible</span>
+        </div>
       </div>
 
-      {% if session.tasks.all %}
-        <div class="space-y-2" id="task-list">
-          {% for task in session.tasks.all %}
-            <div
-              class="task-card flex items-start gap-4 bg-white rounded-xl border px-5 py-4 shadow-sm transition-all
-                {% if task.is_completed %}border-gray-100 opacity-60{% else %}
-                  {% if task.priority == 'high' %}border-l-4 border-l-red-400 border-gray-100
-                  {% elif task.priority == 'medium' %}border-l-4 border-l-amber-400 border-gray-100
-                  {% else %}border-l-4 border-l-green-400 border-gray-100{% endif %}
-                {% endif %}"
-              id="task-{{ task.id }}"
-            >
-              <!-- Checkbox -->
-              <button
-                class="mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors
-                  {% if task.is_completed %}bg-indigo-500 border-indigo-500{% else %}border-gray-300 hover:border-indigo-400{% endif %}"
-                onclick="toggleTask({{ task.id }}, this)"
-                title="Mark as {% if task.is_completed %}incomplete{% else %}complete{% endif %}"
-              >
-                {% if task.is_completed %}
-                  <svg class="w-3 h-3 text-white m-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                  </svg>
-                {% endif %}
-              </button>
+      <!-- Week grid: single overflow-auto container so sticky works cleanly -->
+      <div class="overflow-auto" style="max-height: 68vh;" id="week-scroll">
+        <div style="min-width: max-content;">
 
-              <!-- Task content -->
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900 {% if task.is_completed %}line-through text-gray-400{% endif %}">
-                  {{ task.title }}
-                </p>
-                {% if task.notes %}
-                  <p class="text-xs text-gray-500 mt-0.5">{{ task.notes }}</p>
+          <!-- Sticky day-header row -->
+          <div class="sticky top-0 z-30 flex bg-white border-b border-stone-100">
+            <!-- Corner cell (time column spacer) -->
+            <div class="w-14 flex-shrink-0 border-r border-stone-100 bg-stone-50/80"></div>
+            <!-- One header per day -->
+            {% for plan in day_plans %}
+              <div class="flex-shrink-0 border-r border-stone-100 last:border-r-0 px-3 py-2.5 flex items-center justify-between gap-2"
+                   style="width: 200px;">
+                <div>
+                  <p class="text-[10px] font-bold uppercase tracking-widest leading-none
+                    {% if plan.is_today %}text-violet-500{% else %}text-stone-400{% endif %}">
+                    {% if plan.is_today %}Today · {{ plan.date|date:"M j" }}{% else %}{{ plan.date|date:"D · M j" }}{% endif %}
+                  </p>
+                  <p class="text-[10px] text-stone-400 mt-1 leading-none">
+                    <span id="day-done-{{ plan.date|date:'Ymd' }}">{{ plan.completed }}</span>/{{ plan.total }} done
+                  </p>
+                </div>
+                {% if plan.is_today %}
+                  <form method="post" action="{% url 'reshuffle' session.id %}" class="flex-shrink-0">
+                    {% csrf_token %}
+                    <input type="hidden" name="task_date" value="{{ plan.date|date:'Y-m-d' }}">
+                    <button
+                      type="submit"
+                      title="Re-plan today from now"
+                      class="p-1.5 rounded-lg text-amber-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                      </svg>
+                    </button>
+                  </form>
                 {% endif %}
               </div>
+            {% endfor %}
+          </div>
 
-              <!-- Time badge -->
-              <div class="text-right flex-shrink-0">
-                {% if task.scheduled_start %}
-                  <p class="text-sm font-semibold text-gray-700">
-                    {{ task.scheduled_start|time:"g:i A" }}
-                  </p>
-                  <p class="text-xs text-gray-400">
-                    → {{ task.scheduled_end|time:"g:i A" }}
-                  </p>
-                {% endif %}
-                <span class="inline-block mt-1 text-xs px-2 py-0.5 rounded-full
-                  {% if task.priority == 'high' %}bg-red-50 text-red-600
-                  {% elif task.priority == 'medium' %}bg-amber-50 text-amber-600
-                  {% else %}bg-green-50 text-green-600{% endif %}">
-                  {{ task.priority }}
-                </span>
-              </div>
+          <!-- Timeline body -->
+          <div class="relative flex" style="height: {{ timeline_height }}px;">
+
+            <!-- Sticky time column -->
+            <div class="sticky left-0 z-20 w-14 flex-shrink-0 border-r border-stone-100 bg-white/95">
+              {% for hour in timeline_hours %}
+                <div
+                  class="absolute right-2 text-xs text-stone-400 select-none font-medium"
+                  style="top: {{ hour.top }}px; transform: translateY(-50%);"
+                >{{ hour.label }}</div>
+              {% endfor %}
             </div>
-          {% endfor %}
-        </div>
 
-        <!-- Summary -->
-        <div class="mt-4 flex gap-4 text-xs text-gray-500">
-          <span>{{ total_count }} task{{ total_count|pluralize }}</span>
-          <span>•</span>
-          <span id="completed-count">{{ completed_count }} completed</span>
-        </div>
+            <!-- Day columns -->
+            {% for plan in day_plans %}
+              <div class="relative flex-shrink-0 border-r border-stone-100 last:border-r-0"
+                   style="width: 200px;">
 
-      {% else %}
-        <div class="text-center py-12 text-gray-400">
-          <p class="text-sm">No tasks scheduled yet.</p>
+                <!-- Hour grid lines -->
+                {% for hour in timeline_hours %}
+                  <div class="absolute left-0 right-0 border-t border-stone-100" style="top: {{ hour.top }}px;"></div>
+                {% endfor %}
+
+                <!-- Today highlight -->
+                {% if plan.is_today %}
+                  <div class="absolute inset-0 bg-violet-50/20 pointer-events-none"></div>
+                  <!-- Now indicator -->
+                  <div id="now-line" class="absolute left-0 right-0 z-20 pointer-events-none" style="display:none;">
+                    <div class="relative border-t-2 border-rose-400">
+                      <div class="absolute -left-1 -top-1.5 w-3 h-3 rounded-full bg-rose-400"></div>
+                      <span class="absolute left-3 -top-3 text-[10px] font-bold text-rose-500 bg-white/90 px-1 rounded" id="now-label"></span>
+                    </div>
+                  </div>
+                {% endif %}
+
+                <!-- Task blocks -->
+                {% with col_date=plan.date %}
+                  {% for task in plan.tasks %}
+                    {% if task.scheduled_start %}
+                      <div
+                        class="task-block absolute left-1.5 right-1.5 rounded-xl border overflow-hidden transition-all duration-150 hover:z-10 hover:shadow-md hover:-translate-y-px group
+                          {% if task.is_completed %}opacity-40 bg-stone-50 border-stone-200
+                          {% elif task.priority == 'high' %}bg-rose-50 border-rose-200
+                          {% elif task.priority == 'medium' %}bg-amber-50 border-amber-200
+                          {% else %}bg-emerald-50 border-emerald-200{% endif %}"
+                        style="top: {{ task.scheduled_start|time_to_px }}px; height: {{ task.duration_minutes|dur_to_px }}px;"
+                        id="task-block-{{ task.id }}"
+                        data-day="{{ plan.date|date:'Ymd' }}"
+                      >
+                        <!-- Priority stripe -->
+                        <div class="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl
+                          {% if task.is_completed %}bg-stone-300
+                          {% elif task.priority == 'high' %}bg-rose-400
+                          {% elif task.priority == 'medium' %}bg-amber-400
+                          {% else %}bg-emerald-400{% endif %}"></div>
+
+                        <div class="pl-3 pr-1.5 py-2 h-full flex flex-col gap-0.5 justify-between">
+                          <!-- Top row: toggle + gcal -->
+                          <div class="flex items-center justify-between gap-1">
+                            <button
+                              class="w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all
+                                {% if task.is_completed %}bg-violet-500 border-violet-500{% else %}border-stone-300 hover:border-violet-400{% endif %}"
+                              onclick="toggleTask({{ task.id }}, this, '{{ plan.date|date:'Ymd' }}')"
+                            >
+                              {% if task.is_completed %}
+                                <svg class="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                </svg>
+                              {% endif %}
+                            </button>
+                            {% if task.duration_minutes >= 20 %}
+                              {% with gs=task.scheduled_start|gcal_dt:col_date ge=task.scheduled_end|gcal_dt:col_date %}
+                                {% if gs and ge %}
+                                  <a
+                                    href="https://calendar.google.com/calendar/render?action=TEMPLATE&text={{ task.title|urlencode }}&dates={{ gs }}/{{ ge }}&details={{ task.notes|default:task.priority|urlencode }}"
+                                    target="_blank" rel="noopener noreferrer"
+                                    onclick="event.stopPropagation()"
+                                    class="flex-shrink-0 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-violet-500 transition-all p-0.5 rounded"
+                                  >
+                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                    </svg>
+                                  </a>
+                                {% endif %}
+                              {% endwith %}
+                            {% endif %}
+                          </div>
+
+                          <!-- Task title -->
+                          <p class="text-[11px] font-semibold leading-tight line-clamp-2
+                            {% if task.is_completed %}line-through text-stone-400{% else %}text-stone-800{% endif %}">
+                            {{ task.title }}{% if task.fixed_time %} <span class="text-violet-400">⏰</span>{% endif %}
+                          </p>
+
+                          <!-- Time label (shown if tall enough) -->
+                          {% if task.duration_minutes >= 30 %}
+                            <p class="text-[10px] text-stone-400 leading-none tabular-nums">
+                              {{ task.scheduled_start|time:"g:i" }}–{{ task.scheduled_end|time:"g:i A" }}
+                            </p>
+                          {% endif %}
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                {% endwith %}
+
+              </div>
+            {% endfor %}
+
+          </div>
         </div>
-      {% endif %}
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-3 border-t border-stone-100 bg-stone-50/60 flex items-center justify-between">
+        <p class="text-xs text-stone-400">
+          <span id="completed-total">{{ completed_count }}</span>/{{ total_count }} tasks done this week
+        </p>
+        <button
+          onclick="document.getElementById('gcal-modal').classList.remove('hidden')"
+          class="flex items-center gap-1.5 text-xs text-violet-500 hover:text-violet-700 font-medium transition-colors"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          Add to Google Calendar
+        </button>
+      </div>
+
     </div>
+
   {% else %}
     <!-- Empty state -->
-    <div class="text-center py-16 text-gray-400">
-      <svg class="w-12 h-12 mx-auto mb-4 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
-      <p class="text-sm font-medium text-gray-500">No schedule yet</p>
-      <p class="text-xs mt-1">Brain dump your tasks above to get started.</p>
+    <div class="text-center py-20">
+      <div class="w-14 h-14 bg-violet-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <svg class="w-7 h-7 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+      </div>
+      <p class="text-sm font-semibold text-stone-600">Nothing scheduled yet</p>
+      <p class="text-xs text-stone-400 mt-1 max-w-xs mx-auto">
+        Use the Brain Dump above — type every task, meeting, or errand and mention which day. SecAI builds the whole week.
+      </p>
     </div>
   {% endif %}
 
 </div>
+
+{% if session %}
+<!-- Google Calendar Modal -->
+<div
+  id="gcal-modal"
+  class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm"
+  onclick="if(event.target===this)this.classList.add('hidden')"
+>
+  <div class="bg-white rounded-2xl shadow-2xl border border-stone-200 w-full max-w-md overflow-hidden">
+
+    <div class="flex items-start justify-between px-6 py-4 border-b border-stone-100">
+      <div>
+        <h3 class="text-sm font-bold text-stone-900">Add to Google Calendar</h3>
+        <p class="text-xs text-stone-400 mt-0.5">Tap each event to open it in Google Calendar.</p>
+      </div>
+      <button
+        onclick="document.getElementById('gcal-modal').classList.add('hidden')"
+        class="text-stone-300 hover:text-stone-600 transition-colors p-1 -mr-1 -mt-0.5 rounded-lg hover:bg-stone-100"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="overflow-y-auto max-h-[55vh] p-3 space-y-1">
+      {% for plan in day_plans %}
+        <div class="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-stone-400">
+          {% if plan.is_today %}Today &mdash; {{ plan.date|date:"M j" }}{% else %}{{ plan.date|date:"l, M j" }}{% endif %}
+        </div>
+        {% for task in plan.tasks %}
+          {% if task.scheduled_start %}
+            {% with gs=task.scheduled_start|gcal_dt:plan.date ge=task.scheduled_end|gcal_dt:plan.date %}
+              {% if gs and ge %}
+                <a
+                  href="https://calendar.google.com/calendar/render?action=TEMPLATE&text={{ task.title|urlencode }}&dates={{ gs }}/{{ ge }}&details={{ task.notes|default:task.priority|urlencode }}"
+                  target="_blank" rel="noopener noreferrer"
+                  class="flex items-center gap-3 px-4 py-3 rounded-xl border border-stone-100 hover:border-violet-200 hover:bg-violet-50 transition-all group"
+                >
+                  <div class="flex-shrink-0 w-2 h-2 rounded-full mt-0.5
+                    {% if task.priority == 'high' %}bg-rose-400
+                    {% elif task.priority == 'medium' %}bg-amber-400
+                    {% else %}bg-emerald-400{% endif %}"></div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-stone-800 truncate group-hover:text-violet-700 transition-colors">{{ task.title }}</p>
+                    <p class="text-xs text-stone-400 mt-0.5">
+                      {{ task.scheduled_start|time:"g:i A" }} – {{ task.scheduled_end|time:"g:i A" }}
+                      <span class="text-stone-300 mx-0.5">&middot;</span>{{ task.duration_minutes }}m
+                    </p>
+                  </div>
+                  <div class="flex-shrink-0 w-7 h-7 rounded-lg bg-stone-100 group-hover:bg-violet-100 flex items-center justify-center transition-colors">
+                    <svg class="w-3.5 h-3.5 text-stone-400 group-hover:text-violet-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                  </div>
+                </a>
+              {% endif %}
+            {% endwith %}
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    </div>
+
+    <div class="px-6 py-3.5 border-t border-stone-100 bg-stone-50/80 flex items-center justify-between">
+      <a
+        href="{% url 'export_ics' session.id %}"
+        class="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-600 transition-colors"
+      >
+        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Download .ics (Apple / Outlook)
+      </a>
+      <button
+        onclick="document.getElementById('gcal-modal').classList.add('hidden')"
+        class="text-xs font-semibold text-violet-600 hover:text-violet-800 transition-colors px-2 py-1 rounded-lg hover:bg-violet-50"
+      >
+        Done
+      </button>
+    </div>
+
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-  // Image upload label update
-  document.getElementById('schedule_image').addEventListener('change', function() {
-    const label = document.getElementById('image-label-text');
-    label.textContent = this.files[0] ? this.files[0].name : 'Upload screenshot';
+  // Time-aware greeting
+  (function () {
+    const h = new Date().getHours();
+    const greetings = {
+      morning:   ['Morning', 'Good morning', 'Early start'],
+      afternoon: ['Hey', 'Afternoon', 'Good afternoon'],
+      evening:   ['Evening', 'Hey', 'Still at it'],
+    };
+    const period = h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening';
+    const labels = { morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening' };
+    document.getElementById('time-context').textContent = labels[period];
+    const g = greetings[period];
+    document.getElementById('greeting-line').textContent =
+      g[Math.floor(Math.random() * g.length)] + ', {{ user.username }}.';
+  })();
+
+  // Image upload label
+  document.getElementById('schedule_image').addEventListener('change', function () {
+    document.getElementById('image-label-text').textContent =
+      this.files[0] ? this.files[0].name : 'Upload screenshot';
   });
 
-  // Loading state on form submit
-  document.getElementById('brain-dump-form').addEventListener('submit', function() {
+  // Loading state on submit
+  document.getElementById('brain-dump-form').addEventListener('submit', function () {
     const btn = document.getElementById('submit-btn');
-    const text = document.getElementById('btn-text');
-    const spinner = document.getElementById('btn-spinner');
     btn.disabled = true;
-    text.textContent = 'Generating...';
-    spinner.classList.remove('hidden');
+    document.getElementById('btn-text').textContent = 'Planning...';
+    document.getElementById('btn-spinner').classList.remove('hidden');
   });
 
-  // Toggle task completion
-  function toggleTask(taskId, btn) {
-    fetch(`/task/${taskId}/toggle/`, {
+  // Now indicator
+  const PX_PER_MIN = 1.2;
+  const TIMELINE_START = 8;
+
+  function formatTime(d) {
+    let h = d.getHours(), m = d.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${String(m).padStart(2, '0')} ${ampm}`;
+  }
+
+  function updateNowLine() {
+    const line = document.getElementById('now-line');
+    if (!line) return;
+    const now = new Date();
+    const mins = (now.getHours() - TIMELINE_START) * 60 + now.getMinutes();
+    const label = document.getElementById('now-label');
+    if (mins >= 0 && mins <= (22 - TIMELINE_START) * 60) {
+      line.style.top = Math.round(mins * PX_PER_MIN) + 'px';
+      line.style.display = 'block';
+      if (label) label.textContent = formatTime(now);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    updateNowLine();
+    // Auto-scroll to current time
+    const scroll = document.getElementById('week-scroll');
+    if (scroll) {
+      const now = new Date();
+      const mins = (now.getHours() - TIMELINE_START) * 60 + now.getMinutes();
+      // Account for the sticky header row height (~52px)
+      scroll.scrollTop = Math.max(0, Math.round(mins * PX_PER_MIN) - 100);
+    }
+  });
+  setInterval(updateNowLine, 30000);
+
+  // Global task completion counters
+  // day → {total, completed}
+  const dayCounts = {};
+  {% for plan in day_plans %}
+  dayCounts['{{ plan.date|date:"Ymd" }}'] = { total: {{ plan.total }}, completed: {{ plan.completed }} };
+  {% endfor %}
+  let globalCompleted = {{ completed_count }};
+  const globalTotal = {{ total_count }};
+
+  function toggleTask(id, btn, dayKey) {
+    fetch(`/task/${id}/toggle/`, {
       method: 'POST',
-      headers: {
-        'X-CSRFToken': '{{ csrf_token }}',
-        'Content-Type': 'application/json',
-      },
+      headers: { 'X-CSRFToken': '{{ csrf_token }}' },
     })
     .then(r => r.json())
     .then(data => {
-      const card = document.getElementById(`task-${taskId}`);
-      const title = card.querySelector('p.text-sm.font-medium');
+      const block = document.getElementById(`task-block-${id}`);
+      const title = block.querySelector('p.font-semibold');
+      const stripe = block.querySelector('.absolute.left-0.top-0.bottom-0');
 
       if (data.completed) {
-        btn.classList.add('bg-indigo-500', 'border-indigo-500');
-        btn.classList.remove('border-gray-300');
-        btn.innerHTML = `<svg class="w-3 h-3 text-white m-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>`;
-        title.classList.add('line-through', 'text-gray-400');
-        card.classList.add('opacity-60');
+        block.classList.add('opacity-40');
+        ['bg-rose-50','bg-amber-50','bg-emerald-50'].forEach(c => block.classList.remove(c));
+        ['border-rose-200','border-amber-200','border-emerald-200'].forEach(c => block.classList.remove(c));
+        block.classList.add('bg-stone-50', 'border-stone-200');
+        title.classList.add('line-through', 'text-stone-400');
+        title.classList.remove('text-stone-800');
+        if (stripe) stripe.className = stripe.className.replace(/bg-\w+-400/, 'bg-stone-300');
+        btn.classList.add('bg-violet-500', 'border-violet-500');
+        btn.classList.remove('border-stone-300');
+        btn.innerHTML = `<svg class="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>`;
+        globalCompleted++;
+        if (dayCounts[dayKey]) dayCounts[dayKey].completed++;
       } else {
-        btn.classList.remove('bg-indigo-500', 'border-indigo-500');
-        btn.classList.add('border-gray-300');
+        block.classList.remove('opacity-40', 'bg-stone-50', 'border-stone-200');
+        title.classList.remove('line-through', 'text-stone-400');
+        title.classList.add('text-stone-800');
+        btn.classList.remove('bg-violet-500', 'border-violet-500');
+        btn.classList.add('border-stone-300');
         btn.innerHTML = '';
-        title.classList.remove('line-through', 'text-gray-400');
-        card.classList.remove('opacity-60');
+        globalCompleted = Math.max(0, globalCompleted - 1);
+        if (dayCounts[dayKey]) dayCounts[dayKey].completed = Math.max(0, dayCounts[dayKey].completed - 1);
+      }
+
+      // Update footer total
+      const totalEl = document.getElementById('completed-total');
+      if (totalEl) totalEl.textContent = globalCompleted;
+
+      // Update per-day header counter
+      if (dayKey && dayCounts[dayKey]) {
+        const dayEl = document.getElementById(`day-done-${dayKey}`);
+        if (dayEl) dayEl.textContent = dayCounts[dayKey].completed;
       }
     });
   }
