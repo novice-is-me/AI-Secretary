@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — AI Secretary{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Good day, {{ user.username }} 👋</h1>
+      <p class="text-sm text-gray-500 mt-0.5">What's on your plate today?</p>
+    </div>
+    {% if session %}
+      <form method="post" action="{% url 'reshuffle' session.id %}">
+        {% csrf_token %}
+        <button
+          type="submit"
+          class="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          title="Re-calculate your remaining schedule from now"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Re-shuffle
+        </button>
+      </form>
+    {% endif %}
+  </div>
+
+  <!-- Brain Dump Input -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <h2 class="text-base font-semibold text-gray-800 mb-1">Brain Dump</h2>
+    <p class="text-xs text-gray-500 mb-4">Type your tasks freely — or upload a screenshot. AI will parse and schedule everything.</p>
+
+    <form
+      method="post"
+      action="{% url 'generate_schedule' %}"
+      enctype="multipart/form-data"
+      id="brain-dump-form"
+    >
+      {% csrf_token %}
+
+      <textarea
+        name="brain_dump"
+        id="brain_dump"
+        rows="5"
+        placeholder="e.g. Send report to John, 3pm team call, finish slide deck, gym session, reply to all emails, buy groceries after 6pm..."
+        class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition placeholder-gray-400"
+      ></textarea>
+
+      <div class="mt-3 flex items-center gap-4 flex-wrap">
+        <!-- Image upload -->
+        <label
+          for="schedule_image"
+          class="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 cursor-pointer hover:border-indigo-400 hover:text-indigo-500 transition"
+          id="image-label"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span id="image-label-text">Upload screenshot</span>
+        </label>
+        <input type="file" name="schedule_image" id="schedule_image" accept="image/*" class="hidden" />
+
+        <button
+          type="submit"
+          id="submit-btn"
+          class="ml-auto flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors disabled:opacity-60"
+        >
+          <span id="btn-text">Generate Schedule</span>
+          <svg id="btn-spinner" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hidden animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 12 0 12 12H4z"></path>
+          </svg>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Schedule Display -->
+  {% if session %}
+    <div>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-semibold text-gray-800">
+          Your Daily Roadmap
+          {% if session.is_reshuffled %}
+            <span class="ml-2 text-xs font-normal bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">reshuffled</span>
+          {% endif %}
+        </h2>
+        <span class="text-xs text-gray-400">{{ session.schedule_date }}</span>
+      </div>
+
+      {% if session.tasks.all %}
+        <div class="space-y-2" id="task-list">
+          {% for task in session.tasks.all %}
+            <div
+              class="task-card flex items-start gap-4 bg-white rounded-xl border px-5 py-4 shadow-sm transition-all
+                {% if task.is_completed %}border-gray-100 opacity-60{% else %}
+                  {% if task.priority == 'high' %}border-l-4 border-l-red-400 border-gray-100
+                  {% elif task.priority == 'medium' %}border-l-4 border-l-amber-400 border-gray-100
+                  {% else %}border-l-4 border-l-green-400 border-gray-100{% endif %}
+                {% endif %}"
+              id="task-{{ task.id }}"
+            >
+              <!-- Checkbox -->
+              <button
+                class="mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors
+                  {% if task.is_completed %}bg-indigo-500 border-indigo-500{% else %}border-gray-300 hover:border-indigo-400{% endif %}"
+                onclick="toggleTask({{ task.id }}, this)"
+                title="Mark as {% if task.is_completed %}incomplete{% else %}complete{% endif %}"
+              >
+                {% if task.is_completed %}
+                  <svg class="w-3 h-3 text-white m-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                  </svg>
+                {% endif %}
+              </button>
+
+              <!-- Task content -->
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 {% if task.is_completed %}line-through text-gray-400{% endif %}">
+                  {{ task.title }}
+                </p>
+                {% if task.notes %}
+                  <p class="text-xs text-gray-500 mt-0.5">{{ task.notes }}</p>
+                {% endif %}
+              </div>
+
+              <!-- Time badge -->
+              <div class="text-right flex-shrink-0">
+                {% if task.scheduled_start %}
+                  <p class="text-sm font-semibold text-gray-700">
+                    {{ task.scheduled_start|time:"g:i A" }}
+                  </p>
+                  <p class="text-xs text-gray-400">
+                    → {{ task.scheduled_end|time:"g:i A" }}
+                  </p>
+                {% endif %}
+                <span class="inline-block mt-1 text-xs px-2 py-0.5 rounded-full
+                  {% if task.priority == 'high' %}bg-red-50 text-red-600
+                  {% elif task.priority == 'medium' %}bg-amber-50 text-amber-600
+                  {% else %}bg-green-50 text-green-600{% endif %}">
+                  {{ task.priority }}
+                </span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Summary -->
+        <div class="mt-4 flex gap-4 text-xs text-gray-500">
+          <span>{{ session.tasks.count }} task{{ session.tasks.count|pluralize }}</span>
+          <span>•</span>
+          <span id="completed-count">{{ completed_count }} completed</span>
+        </div>
+
+      {% else %}
+        <div class="text-center py-12 text-gray-400">
+          <p class="text-sm">No tasks scheduled yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  {% else %}
+    <!-- Empty state -->
+    <div class="text-center py-16 text-gray-400">
+      <svg class="w-12 h-12 mx-auto mb-4 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+      <p class="text-sm font-medium text-gray-500">No schedule yet</p>
+      <p class="text-xs mt-1">Brain dump your tasks above to get started.</p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Image upload label update
+  document.getElementById('schedule_image').addEventListener('change', function() {
+    const label = document.getElementById('image-label-text');
+    label.textContent = this.files[0] ? this.files[0].name : 'Upload screenshot';
+  });
+
+  // Loading state on form submit
+  document.getElementById('brain-dump-form').addEventListener('submit', function() {
+    const btn = document.getElementById('submit-btn');
+    const text = document.getElementById('btn-text');
+    const spinner = document.getElementById('btn-spinner');
+    btn.disabled = true;
+    text.textContent = 'Generating...';
+    spinner.classList.remove('hidden');
+  });
+
+  // Toggle task completion
+  function toggleTask(taskId, btn) {
+    fetch(`/task/${taskId}/toggle/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/json',
+      },
+    })
+    .then(r => r.json())
+    .then(data => {
+      const card = document.getElementById(`task-${taskId}`);
+      const title = card.querySelector('p.text-sm.font-medium');
+
+      if (data.completed) {
+        btn.classList.add('bg-indigo-500', 'border-indigo-500');
+        btn.classList.remove('border-gray-300');
+        btn.innerHTML = `<svg class="w-3 h-3 text-white m-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>`;
+        title.classList.add('line-through', 'text-gray-400');
+        card.classList.add('opacity-60');
+      } else {
+        btn.classList.remove('bg-indigo-500', 'border-indigo-500');
+        btn.classList.add('border-gray-300');
+        btn.innerHTML = '';
+        title.classList.remove('line-through', 'text-gray-400');
+        card.classList.remove('opacity-60');
+      }
+    });
+  }
+</script>
+{% endblock %}
