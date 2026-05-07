@@ -1,0 +1,37 @@
+<aside class="h-screen w-64 border-r border-[#e8e4e0] bg-[#fdfcfb] hidden lg:flex flex-col justify-between py-8 px-6">
+    <div class="space-y-12">
+        <div class="flex flex-col">
+            <span class="text-2xl font-semibold text-[#94A684] tracking-tight">Sanctuary</span>
+            <span class="font-label-sm text-xs text-[#767873] mt-1">Calm Companion</span>
+        </div>
+        
+        <nav class="space-y-4">
+            <a class="flex items-center gap-4 py-3 px-4 rounded-lg text-[#767873] hover:bg-[#f2f0ed] transition-colors group" href="#">
+                <span class="material-symbols-outlined text-lg">chat_bubble</span>
+                <span class="font-label-md">Huddle</span>
+            </a>
+            
+            <a class="flex items-center gap-4 py-3 px-4 rounded-lg text-[#94A684] font-bold border-r-4 border-[#94A684] bg-[#f2f0ed] transition-colors group" href="#">
+                <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
+                <span class="font-label-md">Timeline</span>
+            </a>
+        </nav>
+    </div>
+    
+    <div class="space-y-6">
+        <a class="flex items-center gap-4 py-3 px-4 rounded-lg text-[#767873] hover:bg-[#f2f0ed] transition-colors" href="#">
+            <span class="material-symbols-outlined text-lg">settings</span>
+            <span class="font-label-md">Settings</span>
+        </a>
+        
+        <div class="flex items-center gap-3 px-4 py-2 border-t border-[#e8e4e0] pt-6">
+            <div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center">
+                <img alt="User Profile" class="w-full h-full rounded-full object-cover" src="{{ user_avatar_url|default:'https://lh3.googleusercontent.com/aida-public/AB6AXuDxk2cn2Lz5-fbn1dH_3l4TDnoYIH_eoihYafEQWGG0dZreRG2tdYlQcLhcnxGE0HO2ffQwGksZreb0ov1FRYTwI8y4R-WWdCFz0CJ3dWcYDqWx2BuFojbM_Mq0MOjwQfB2fGW5lOLo_tQPGH2nG27lqX4faKxTrvHxRVu60_Mxuvf5XKvT77MAucfXXT0wdMRmwDcmvXZU9Jh4ZMzWaimp-7S87c4OhIrj_AO6NqY9PbiCYB7AAMCcUuWtEdE91nOo8tIAAAqP5b7b' }}"/>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-label-md font-bold">{{ user_name|default:'Elena' }}</span>
+                <span class="text-[10px] text-outline">Personal Workspace</span>
+            </div>
+        </div>
+    </div>
+</aside>

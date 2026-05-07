@@ -1,0 +1,19 @@
+{% extends 'base_auth.html' %}
+
+{% block title %}Signing Out | Sanctuary{% endblock %}
+
+{% block content %}
+<div style="min-height:100vh; display:flex; align-items:center; justify-content:center; background:#fbf9f4; padding:24px;">
+  <div style="display:flex; flex-direction:column; align-items:center; gap:14px; color:#536346;">
+    <div style="width:48px; height:48px; border-radius:50%; background:#94a684; display:flex; align-items:center; justify-content:center;">
+      <span class="material-symbols-outlined" style="color:white; font-variation-settings:'FILL' 1;">spa</span>
+    </div>
+    <p style="font-size:14px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; margin:0;">Signing out</p>
+  </div>
+</div>
+
+<script>
+  localStorage.setItem('sanctuary_huddle_history_visible', 'false');
+  window.location.replace("{% url 'home' %}");
+</script>
+{% endblock %}

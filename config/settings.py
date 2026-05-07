@@ -93,11 +93,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
-# AI provider config — works with OpenAI, Groq, OpenRouter, Gemini, etc.
-# For Groq (free): AI_BASE_URL=https://api.groq.com/openai/v1  AI_MODEL=llama-3.3-70b-versatile
-# For OpenRouter (free models): AI_BASE_URL=https://openrouter.ai/api/v1  AI_MODEL=meta-llama/llama-3.3-70b-instruct:free
 AI_API_KEY = os.environ.get('AI_API_KEY', os.environ.get('OPENAI_API_KEY', ''))
 AI_BASE_URL = os.environ.get('AI_BASE_URL', None)
 AI_MODEL = os.environ.get('AI_MODEL', 'gpt-4o')
 
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024

@@ -1,0 +1,787 @@
+{% extends 'base_auth.html' %}
+{% block title %}Huddle | Sanctuary{% endblock %}
+
+{% block extra_head %}
+<style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .glass-effect {
+        background: rgba(251,249,244,0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+    .chat-bubble-received { border-bottom-left-radius: 4px; }
+    .chat-bubble-sent { border-bottom-right-radius: 4px; }
+    body { overflow: hidden; height: 100vh; display: flex; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ── Desktop Sidebar ── -->
+<aside style="width:256px; border-right:1px solid #e8e4e0; background:#fdfcfb; display:none; flex-direction:column; justify-content:space-between; padding:32px 24px; height:100vh; flex-shrink:0;" class="sidebar-desk">
+    <div>
+        <!-- Logo -->
+        <div style="display:flex; align-items:center; gap:12px; padding:0 8px; margin-bottom:40px;">
+            <div style="width:40px; height:40px; border-radius:50%; background:#94a684; display:flex; align-items:center; justify-content:center;">
+                <span class="material-symbols-outlined" style="color:white; font-variation-settings:'FILL' 1;">spa</span>
+            </div>
+            <div>
+                <div style="font-size:22px; font-weight:600; color:#94A684; line-height:1.2;">Sanctuary</div>
+                <div style="font-size:10px; color:#75786f; letter-spacing:0.12em; text-transform:uppercase;">Calm Companion</div>
+            </div>
+        </div>
+        <!-- Nav -->
+        <nav style="display:flex; flex-direction:column; gap:4px;">
+            <a href="{% url 'huddle' %}" style="display:flex; align-items:center; gap:16px; padding:12px 16px; color:#94A684; font-weight:700; font-size:14px; border-right:4px solid #94A684; text-decoration:none; background:rgba(148,166,132,0.08); border-radius:8px 0 0 8px;">
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">chat_bubble</span> Huddle
+            </a>
+            <a href="{% url 'timeline' %}" style="display:flex; align-items:center; gap:16px; padding:12px 16px; border-radius:8px; color:#75786f; font-size:14px; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='#f2f0ed'" onmouseout="this.style.background='transparent'">
+                <span class="material-symbols-outlined">auto_stories</span>
+                <span>Timeline</span>
+            </a>
+        </nav>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px;">
+        <!-- User card -->
+        <a href="{% url 'profile' %}" style="display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px; background:#f0eee9; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='#e4e2dd'" onmouseout="this.style.background='#f0eee9'">
+            <img id="huddleSidebarProfileImg" src="{{ profile_image_url }}" alt="{{ display_name }}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;"/>
+            <div>
+                <div style="font-size:14px; font-weight:600; color:#1b1c19;">{{ display_name }}</div>
+            </div>
+        </a>
+    </div>
+</aside>
+
+<!-- ── Mobile Top Nav ── -->
+<header class="mobile-topnav" style="display:none; position:fixed; top:0; left:0; right:0; z-index:50; justify-content:space-between; align-items:center; padding:16px 24px; background:rgba(253,252,251,0.85); backdrop-filter:blur(12px);">
+  <div style="display:flex; align-items:center; gap:8px;">
+    <span class="material-symbols-outlined" style="color:#94A684; font-variation-settings:'FILL' 1;">spa</span>
+    <h1 style="font-size:20px; font-weight:700; color:#94A684; margin:0;">Sanctuary</h1>
+  </div>
+  <span class="material-symbols-outlined" style="color:#75786f;">account_circle</span>
+</header>
+
+<!-- ── Main Content ── -->
+<main style="flex:1; display:flex; flex-direction:column; height:100vh; overflow:hidden; background:#fbf9f4; position:relative;">
+
+    <!-- Scrollable area -->
+    <div class="no-scrollbar" id="scroll-area" style="flex:1; overflow-y:auto; padding:24px 64px 24px 64px;">
+        <div style="max-width:768px; margin:0 auto;">
+
+            <!-- ── DESKTOP VIEW ── -->
+            <div class="desktop-content">
+                <div style="display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; padding:24px 0 32px;">
+                    <div style="width:64px; height:64px; border-radius:50%; background:rgba(148,166,132,0.15); display:flex; align-items:center; justify-content:center;">
+                        <div style="width:44px; height:44px; background:#94a684; border-radius:50%; display:flex; align-items:center; justify-content:center; animation:pulse 2s infinite;">
+                            <span class="material-symbols-outlined" style="color:white; font-variation-settings:'FILL' 1;">spa</span>
+                        </div>
+                    </div>
+                    <h2 style="font-size:22px; font-weight:400; color:#1b1c19; margin:0;" class="greeting-heading"><span class="greeting-time">Good Morning</span>, {{ display_name }}</h2>
+                    <p style="font-size:16px; color:#75786f; margin:0; max-width:260px;">What's on your plate today?</p>
+                </div>
+                <div id="desktop-chat-feed" style="display:flex; flex-direction:column; gap:16px; padding:8px 0;">
+                    <div id="desktop-waiting-hint" style="display:flex; justify-content:center; padding:16px 0;">
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:12px; opacity:0.55;">
+                            <div style="width:16px; height:16px; border-radius:50%; background:linear-gradient(135deg,#536346,#d6e9c3); filter:blur(2px); animation:pulse 2s infinite;"></div>
+                            <p style="font-size:12px; font-style:italic; color:#75786f; margin:0;">Waiting for your lead...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── MOBILE VIEW ── -->
+            <div class="mobile-content" style="display:none; padding-top:72px; padding-bottom:160px;">
+                <div style="display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; padding:24px 0 32px;">
+                    <div style="width:64px; height:64px; border-radius:50%; background:rgba(148,166,132,0.15); display:flex; align-items:center; justify-content:center;">
+                        <div style="width:44px; height:44px; background:#94a684; border-radius:50%; display:flex; align-items:center; justify-content:center; animation:pulse 2s infinite;">
+                            <span class="material-symbols-outlined" style="color:white; font-variation-settings:'FILL' 1;">spa</span>
+                        </div>
+                    </div>
+                    <h2 style="font-size:22px; font-weight:400; color:#1b1c19; margin:0;" class="greeting-heading"><span class="greeting-time">Good Morning</span>, {{ display_name }}</h2>
+                    <p style="font-size:16px; color:#75786f; margin:0; max-width:260px;">What's on your plate today?</p>
+                </div>
+                <div id="mobile-chat-feed" style="display:flex; flex-direction:column; gap:20px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Desktop Input Bar ── -->
+    <div class="desktop-input" style="padding:16px 64px 24px; background:rgba(251,249,244,0.95); backdrop-filter:blur(8px); border-top:1px solid rgba(197,200,189,0.15); flex-shrink:0;">
+        <div style="max-width:768px; margin:0 auto;">
+            <!-- Mode toggle -->
+            <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+                <div style="display:flex; background:#eae8e3; border-radius:9999px; padding:3px; gap:2px;">
+                    <button id="mode-chat-btn" onclick="window.setMode('chat')" style="display:flex; align-items:center; gap:5px; padding:5px 14px; border-radius:9999px; border:none; font-size:12px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; color:#75786f; background:none; transition:all 0.2s;">
+                        <span class="material-symbols-outlined" style="font-size:14px;">chat</span> Chat
+                    </button>
+                    <button id="mode-tasks-btn" onclick="window.setMode('tasks')" style="display:flex; align-items:center; gap:5px; padding:5px 14px; border-radius:9999px; border:none; font-size:12px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; color:white; background:#536346; transition:all 0.2s;">
+                        <span class="material-symbols-outlined" style="font-size:14px;">checklist</span> Add Tasks
+                    </button>
+                </div>
+            </div>
+            <div class="glass-effect" style="border-radius:9999px; border:1px solid white; padding:8px; display:flex; align-items:center; gap:8px; box-shadow:0 8px 32px rgba(83,99,70,0.08);">
+                <!-- + button with popup -->
+                <div style="position:relative; flex-shrink:0;">
+                    <button id="desktop-add-btn" title="Attach" style="width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:none; border:none; color:#75786f; cursor:pointer; transition:all 0.2s;">
+                        <span class="material-symbols-outlined">add</span>
+                    </button>
+                    <!-- Attach popup -->
+                    <div id="desktop-attach-popup" style="display:none; position:absolute; bottom:52px; left:0; background:rgba(251,249,244,0.96); backdrop-filter:blur(16px); border:1px solid rgba(197,200,189,0.5); border-radius:16px; padding:8px; box-shadow:0 8px 32px rgba(83,99,70,0.14); min-width:180px; z-index:100; animation:popIn 0.15s ease;">
+                        <button class="attach-option" id="desktop-upload-btn" style="display:flex; align-items:center; gap:12px; width:100%; padding:10px 14px; background:none; border:none; border-radius:10px; cursor:pointer; font-size:14px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; transition:background 0.15s;" onmouseover="this.style.background='#f0eee9'" onmouseout="this.style.background='none'">
+                            <span class="material-symbols-outlined" style="font-size:20px; color:#536346;">image</span>
+                            Upload Image
+                        </button>
+                        <button class="attach-option camera-btn-desktop" id="desktop-camera-btn" style="display:flex; align-items:center; gap:12px; width:100%; padding:10px 14px; background:none; border:none; border-radius:10px; cursor:pointer; font-size:14px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; transition:background 0.15s;" onmouseover="this.style.background='#f0eee9'" onmouseout="this.style.background='none'">
+                            <span class="material-symbols-outlined" style="font-size:20px; color:#536346;">photo_camera</span>
+                            Take Photo
+                        </button>
+                    </div>
+                </div>
+                <textarea id="desktop-input" class="huddle-input" rows="1" placeholder="What's on your mind?" style="flex:1; background:transparent; border:none; outline:none; font-size:16px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; padding:8px; min-height:24px; max-height:120px; resize:none; line-height:1.45;"></textarea>
+                <div style="padding-right:8px;">
+                    <button class="huddle-send-btn" style="width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#536346; border:none; color:white; cursor:pointer; box-shadow:0 4px 12px rgba(83,99,70,0.3); transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Mobile Input + Bottom Nav ── -->
+    <div class="mobile-bottom" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:50; flex-direction:column; align-items:center; gap:0;">
+        <!-- Mode toggle (mobile) -->
+        <div style="display:flex; background:#eae8e3; border-radius:9999px; padding:3px; gap:2px; margin-bottom:8px;">
+            <button id="mobile-mode-chat-btn" onclick="window.setMode('chat')" style="display:flex; align-items:center; gap:5px; padding:5px 14px; border-radius:9999px; border:none; font-size:11px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; color:#75786f; background:none; transition:all 0.2s;">
+                <span class="material-symbols-outlined" style="font-size:13px;">chat</span> Chat
+            </button>
+            <button id="mobile-mode-tasks-btn" onclick="window.setMode('tasks')" style="display:flex; align-items:center; gap:5px; padding:5px 14px; border-radius:9999px; border:none; font-size:11px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; color:white; background:#536346; transition:all 0.2s;">
+                <span class="material-symbols-outlined" style="font-size:13px;">checklist</span> Add Tasks
+            </button>
+        </div>
+        <!-- Chat input row -->
+        <div style="width:calc(100% - 48px); margin-bottom:12px; background:rgba(251,249,244,0.82); backdrop-filter:blur(20px); border-radius:9999px; padding:4px 8px 4px 8px; display:flex; align-items:center; gap:6px; box-shadow:0 4px 24px rgba(148,166,132,0.15); border:1px solid rgba(255,255,255,0.5);">
+            <!-- + button with popup (mobile) -->
+            <div style="position:relative; flex-shrink:0;">
+                <button id="mobile-add-btn" style="width:40px; height:40px; border-radius:50%; background:none; border:none; color:#75786f; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                    <span class="material-symbols-outlined" style="font-size:22px;">add</span>
+                </button>
+                <!-- Attach popup (mobile) -->
+                <div id="mobile-attach-popup" style="display:none; position:absolute; bottom:52px; left:0; background:rgba(251,249,244,0.96); backdrop-filter:blur(16px); border:1px solid rgba(197,200,189,0.5); border-radius:16px; padding:8px; box-shadow:0 8px 32px rgba(83,99,70,0.14); min-width:170px; z-index:100; animation:popIn 0.15s ease;">
+                    <button class="attach-option" id="mobile-upload-btn" style="display:flex; align-items:center; gap:12px; width:100%; padding:10px 14px; background:none; border:none; border-radius:10px; cursor:pointer; font-size:14px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; transition:background 0.15s;" onmouseover="this.style.background='#f0eee9'" onmouseout="this.style.background='none'">
+                        <span class="material-symbols-outlined" style="font-size:20px; color:#536346;">image</span>
+                        Upload Image
+                    </button>
+                    <button class="attach-option" id="mobile-camera-btn" style="display:flex; align-items:center; gap:12px; width:100%; padding:10px 14px; background:none; border:none; border-radius:10px; cursor:pointer; font-size:14px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; transition:background 0.15s;" onmouseover="this.style.background='#f0eee9'" onmouseout="this.style.background='none'">
+                        <span class="material-symbols-outlined" style="font-size:20px; color:#536346;">photo_camera</span>
+                        Take Photo
+                    </button>
+                </div>
+            </div>
+            <textarea id="mobile-input" class="huddle-input" rows="1" placeholder="Tell me what's on your mind..." style="flex:1; background:transparent; border:none; outline:none; font-size:15px; color:#1b1c19; font-family:'Plus Jakarta Sans',sans-serif; padding:10px 0; min-height:24px; max-height:96px; resize:none; line-height:1.4;"></textarea>
+            <button class="huddle-send-btn" style="width:44px; height:44px; border-radius:50%; background:#536346; border:none; color:white; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 4px 12px rgba(83,99,70,0.3); flex-shrink:0;">
+                <span class="material-symbols-outlined">arrow_upward</span>
+            </button>
+        </div>
+        <!-- Bottom Nav -->
+        <nav id="mobile-bottom-nav" style="width:calc(100% - 32px); margin-bottom:24px; background:rgba(255,255,255,0.75); backdrop-filter:blur(20px); border-radius:9999px; display:flex; justify-content:space-around; align-items:center; padding:8px 16px; box-shadow:0 8px 32px rgba(148,166,132,0.12); border:1px solid rgba(255,255,255,0.25); transition:opacity 0.2s, max-height 0.2s, margin 0.2s, padding 0.2s; overflow:hidden; max-height:80px;">
+            <a href="{% url 'huddle' %}" style="display:flex; flex-direction:column; align-items:center; background:#94a684; color:white; border-radius:9999px; padding:10px 20px; text-decoration:none; gap:2px;">
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1; font-size:22px;">chat_bubble</span>
+                <span style="font-size:10px; font-weight:500;">Huddle</span>
+            </a>
+            <a href="{% url 'timeline' %}" style="display:flex; flex-direction:column; align-items:center; color:#75786f; padding:10px 20px; text-decoration:none; gap:2px;">
+                <span class="material-symbols-outlined" style="font-size:22px;">auto_stories</span>
+                <span style="font-size:10px; font-weight:500;">Timeline</span>
+            </a>
+            <a href="{% url 'profile' %}" style="display:flex; flex-direction:column; align-items:center; color:#75786f; padding:10px 20px; text-decoration:none; gap:2px;">
+                <span class="material-symbols-outlined" style="font-size:22px;">person</span>
+                <span style="font-size:10px; font-weight:500;">Profile</span>
+            </a>
+        </nav>
+    </div>
+</main>
+
+<!-- Hidden file inputs -->
+<input type="file" id="upload-input" accept="image/*" style="display:none;" />
+<input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none;" />
+
+<!-- Decorative blobs -->
+<div style="position:fixed; top:10%; right:-5%; width:35vw; height:35vw; background:rgba(83,99,70,0.04); border-radius:50%; filter:blur(80px); pointer-events:none; z-index:0;"></div>
+<div style="position:fixed; bottom:15%; left:-5%; width:25vw; height:25vw; background:rgba(77,97,113,0.04); border-radius:50%; filter:blur(60px); pointer-events:none; z-index:0;"></div>
+
+<style>
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.92)} }
+@keyframes popIn { from{opacity:0;transform:translateY(6px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+/* Desktop layout */
+@media (min-width: 1024px) {
+    body { flex-direction: row !important; }
+    .sidebar-desk { display: flex !important; }
+    .mobile-topnav { display: none !important; }
+    .desktop-content { display: block !important; }
+    .mobile-content { display: none !important; }
+    .desktop-input { display: block !important; }
+    .mobile-bottom { display: none !important; }
+    #scroll-area { padding: 24px 64px; }
+    /* Hide camera button on desktop — camera capture not accessible on desktop */
+    .camera-btn-desktop { display: none !important; }
+}
+
+/* Mobile layout */
+@media (max-width: 1023px) {
+    body { flex-direction: column !important; overflow: hidden !important; }
+    .sidebar-desk { display: none !important; }
+    .mobile-topnav { display: flex !important; }
+    .desktop-content { display: none !important; }
+    .mobile-content { display: block !important; }
+    .desktop-input { display: none !important; }
+    .mobile-bottom { display: flex !important; }
+    #scroll-area { padding: 0 20px; }
+}
+</style>
+
+<script>
+const STORAGE_KEY = 'sanctuary_huddle_messages';
+const HISTORY_VISIBLE_KEY = 'sanctuary_huddle_history_visible';
+const PROFILE_IMAGE_URL = '{{ profile_image_url|escapejs }}';
+let showHistory = localStorage.getItem(HISTORY_VISIBLE_KEY) !== 'false';
+
+// ── Helpers ──────────────────────────────────────────
+function getStoredMessages() {
+    try {
+        return (JSON.parse(localStorage.getItem(STORAGE_KEY)) || []).map(msg => {
+            if (msg.role) return msg;
+            const text = String(msg.text || '').trim();
+            const looksLikeAssistant = /^(i found|found|extracted|could not|network error|building your schedule|something went wrong)/i.test(text);
+            return { ...msg, role: looksLikeAssistant ? 'assistant' : 'user' };
+        });
+    }
+    catch { return []; }
+}
+function getMessages() {
+    return showHistory ? getStoredMessages() : [];
+}
+function saveMessages(msgs) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
+}
+function timeLabel() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function scrollToBottom() {
+    document.querySelectorAll('.no-scrollbar').forEach(el => { el.scrollTop = el.scrollHeight; });
+}
+function avatarMarkup() {
+    return `<img src="${PROFILE_IMAGE_URL}" alt="{{ display_name|escapejs }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-top:4px;" />`;
+}
+function assistantAvatarMarkup() {
+    return `
+        <div style="width:32px;height:32px;border-radius:50%;background:#94a684;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:4px;">
+            <span class="material-symbols-outlined" style="font-size:17px;color:white;font-variation-settings:'FILL' 1;">spa</span>
+        </div>`;
+}
+
+// ── Bubble builders ───────────────────────────────────
+function createTextBubble(text, time) {
+    const w = document.createElement('div');
+    w.className = 'user-msg-bubble';
+    w.style.cssText = 'display:flex;flex-direction:row-reverse;gap:12px;max-width:85%;margin-left:auto;margin-top:12px;';
+    w.innerHTML = `
+        ${avatarMarkup()}
+        <div style="background:#536346;color:white;padding:14px 16px;border-radius:16px;border-bottom-right-radius:4px;box-shadow:0 2px 8px rgba(83,99,70,0.2);">
+            <p style="font-size:15px;margin:0 0 4px;line-height:1.55;white-space:pre-wrap;">${escapeHtml(text)}</p>
+            <span style="font-size:10px;opacity:0.65;display:block;text-align:right;">${time}</span>
+        </div>`;
+    return w;
+}
+
+function createAssistantBubble(text, time) {
+    const w = document.createElement('div');
+    w.className = 'assistant-msg-bubble';
+    w.style.cssText = 'display:flex;gap:12px;max-width:85%;margin-right:auto;margin-top:12px;';
+    w.innerHTML = `
+        ${assistantAvatarMarkup()}
+        <div style="background:#f5f3ee;color:#1b1c19;padding:14px 16px;border-radius:16px;border-bottom-left-radius:4px;box-shadow:0 2px 8px rgba(83,99,70,0.08);border:1px solid rgba(197,200,189,0.35);">
+            <p style="font-size:15px;margin:0 0 4px;line-height:1.55;white-space:pre-wrap;">${escapeHtml(text)}</p>
+            <span style="font-size:10px;color:#75786f;display:block;text-align:left;">${time || ''}</span>
+        </div>`;
+    return w;
+}
+
+function createImageBubble(dataUrl, time) {
+    const w = document.createElement('div');
+    w.className = 'user-msg-bubble';
+    w.style.cssText = 'display:flex;flex-direction:row-reverse;gap:12px;max-width:85%;margin-left:auto;margin-top:12px;';
+    w.innerHTML = `
+        ${avatarMarkup()}
+        <div style="background:#536346;padding:8px;border-radius:16px;border-bottom-right-radius:4px;box-shadow:0 2px 8px rgba(83,99,70,0.2);">
+            <img src="${dataUrl}" alt="Sent image" style="max-width:220px;max-height:200px;width:100%;border-radius:10px;display:block;object-fit:cover;" />
+            <span style="font-size:10px;color:rgba(255,255,255,0.65);display:block;text-align:right;margin-top:4px;">${time}</span>
+        </div>`;
+    return w;
+}
+
+// ── Render all messages ───────────────────────────────
+function renderMessages() {
+    const msgs = getMessages();
+    const storedCount = getStoredMessages().length;
+    const feeds = [
+        document.getElementById('mobile-chat-feed'),
+        document.getElementById('desktop-chat-feed')
+    ];
+    feeds.forEach(container => {
+        if (!container) return;
+        container.querySelectorAll('.user-msg-bubble,.assistant-msg-bubble,.history-access').forEach(el => el.remove());
+        if (!showHistory && storedCount) {
+            const history = document.createElement('button');
+            history.className = 'history-access';
+            history.type = 'button';
+            history.style.cssText = 'align-self:center;display:flex;align-items:center;gap:8px;border:1px solid rgba(148,166,132,0.35);background:#f5f3ee;color:#536346;border-radius:9999px;padding:9px 14px;font-size:12px;font-weight:700;font-family:"Plus Jakarta Sans",sans-serif;cursor:pointer;margin:6px auto 10px;';
+            history.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px;">history</span> View previous chat (${storedCount})`;
+            history.addEventListener('click', () => {
+                showHistory = true;
+                localStorage.setItem(HISTORY_VISIBLE_KEY, 'true');
+                renderMessages();
+            });
+            container.appendChild(history);
+        }
+        msgs.forEach(msg => {
+            const el = msg.role === 'assistant'
+                ? createAssistantBubble(msg.text || '', msg.time)
+                : msg.type === 'image'
+                ? createImageBubble(msg.dataUrl, msg.time)
+                : createTextBubble(msg.text, msg.time);
+            container.appendChild(el);
+        });
+        const area = container.closest('.no-scrollbar') || container.parentElement;
+        if (area) area.scrollTop = area.scrollHeight;
+    });
+
+    // Hide/show "Waiting for your lead..." hint on desktop
+    const hint = document.getElementById('desktop-waiting-hint');
+    if (hint) hint.style.display = msgs.length > 0 || storedCount > 0 ? 'none' : 'flex';
+}
+
+// ── Send text ─────────────────────────────────────────
+function sendMessage(inputEl) {
+    const text = inputEl.value.trim();
+    if (!text) return;
+    const msgs = getStoredMessages();
+    msgs.push({ type: 'text', role: 'user', text, time: timeLabel() });
+    saveMessages(msgs);
+    showHistory = true;
+    localStorage.setItem(HISTORY_VISIBLE_KEY, 'true');
+    inputEl.value = '';
+    renderMessages();
+    scrollToBottom();
+}
+
+// ── Send image ────────────────────────────────────────
+function sendImage(dataUrl) {
+    const msgs = getStoredMessages();
+    msgs.push({ type: 'image', role: 'user', dataUrl, time: timeLabel() });
+    saveMessages(msgs);
+    showHistory = true;
+    localStorage.setItem(HISTORY_VISIBLE_KEY, 'true');
+    renderMessages();
+    scrollToBottom();
+}
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        if (!file) return reject();
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// ── Wire up text inputs & send buttons ───────────────
+function initInputs() {
+    document.querySelectorAll('.huddle-input').forEach(input => {
+        input.addEventListener('input', () => {
+            input.style.height = 'auto';
+            input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+        });
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
+        });
+    });
+    const desktopBtn = document.querySelector('.desktop-input .huddle-send-btn');
+    const mobileBtn  = document.querySelector('.mobile-bottom .huddle-send-btn');
+    if (desktopBtn) desktopBtn.addEventListener('click', () => sendMessage(document.getElementById('desktop-input')));
+    if (mobileBtn)  mobileBtn.addEventListener('click',  () => sendMessage(document.getElementById('mobile-input')));
+}
+
+// ── Wire up image / camera buttons (popup) ────────────
+function initMediaButtons() {
+    const uploadInput = document.getElementById('upload-input');
+    const cameraInput = document.getElementById('camera-input');
+
+    function closeAllPopups() {
+        ['desktop-attach-popup','mobile-attach-popup'].forEach(id => {
+            const p = document.getElementById(id);
+            if (p) p.style.display = 'none';
+        });
+        ['desktop-add-btn','mobile-add-btn'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            const icon = btn.querySelector('.material-symbols-outlined');
+            if (icon) icon.textContent = 'add';
+            btn.style.background = '';
+            btn.style.color = '#75786f';
+        });
+    }
+
+    function togglePopup(popupId, addBtnId) {
+        const popup  = document.getElementById(popupId);
+        const addBtn = document.getElementById(addBtnId);
+        if (!popup || !addBtn) return;
+        addBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            const isOpen = popup.style.display !== 'none';
+            closeAllPopups();
+            if (!isOpen) {
+                popup.style.display = 'block';
+                const icon = addBtn.querySelector('.material-symbols-outlined');
+                if (icon) icon.textContent = 'close';
+                addBtn.style.background = '#f0eee9';
+                addBtn.style.color = '#536346';
+            }
+        });
+    }
+
+    togglePopup('desktop-attach-popup', 'desktop-add-btn');
+    togglePopup('mobile-attach-popup',  'mobile-add-btn');
+
+    // Close on outside click
+    document.addEventListener('click', e => {
+        const inside = e.target.closest('#desktop-attach-popup,#desktop-add-btn,#mobile-attach-popup,#mobile-add-btn');
+        if (!inside) closeAllPopups();
+    });
+
+    // Wire option buttons → file inputs
+    document.getElementById('desktop-upload-btn')?.addEventListener('click', () => { closeAllPopups(); uploadInput.click(); });
+    document.getElementById('mobile-upload-btn')?.addEventListener('click',  () => { closeAllPopups(); uploadInput.click(); });
+    document.getElementById('desktop-camera-btn')?.addEventListener('click', () => { closeAllPopups(); cameraInput.click(); });
+    document.getElementById('mobile-camera-btn')?.addEventListener('click',  () => { closeAllPopups(); cameraInput.click(); });
+
+    [uploadInput, cameraInput].forEach(inp => {
+        if (!inp) return;
+        inp.addEventListener('change', async () => {
+            const file = inp.files && inp.files[0];
+            if (!file) return;
+            try {
+                const dataUrl = await readFileAsDataUrl(file);
+                sendImage(dataUrl);
+            } catch(e) { console.error('Failed to read image', e); }
+            inp.value = '';
+        });
+    });
+}
+
+
+// ── Mobile: collapse nav when input is focused ───────
+function initMobileFocusBehavior() {
+    const mobileInput = document.getElementById('mobile-input');
+    const bottomNav   = document.getElementById('mobile-bottom-nav');
+    if (!mobileInput || !bottomNav) return;
+
+    mobileInput.addEventListener('focus', () => {
+        // Collapse the nav completely so it takes up zero space
+        bottomNav.style.maxHeight  = '0';
+        bottomNav.style.opacity    = '0';
+        bottomNav.style.padding    = '0 16px';
+        bottomNav.style.marginBottom = '0';
+        bottomNav.style.pointerEvents = 'none';
+    });
+
+    mobileInput.addEventListener('blur', () => {
+        // Small delay so tap on nav item registers first
+        setTimeout(() => {
+            bottomNav.style.maxHeight  = '80px';
+            bottomNav.style.opacity    = '1';
+            bottomNav.style.padding    = '8px 16px';
+            bottomNav.style.marginBottom = '24px';
+            bottomNav.style.pointerEvents = '';
+        }, 150);
+    });
+}
+
+// ── Greeting ──────────────────────────────────────────
+function getGreeting() {
+    const h = new Date().getHours();
+    if (h >= 5  && h < 12) return 'Good Morning';
+    if (h >= 12 && h < 17) return 'Good Afternoon';
+    if (h >= 17 && h < 21) return 'Good Evening';
+    return 'Good Night';
+}
+
+// ── Boot ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    initInputs();
+    initMediaButtons();
+    initMobileFocusBehavior();
+    renderMessages();
+    const greeting = getGreeting();
+    document.querySelectorAll('.greeting-time').forEach(el => el.textContent = greeting);
+});
+</script>
+
+<script>
+(function() {
+    // ── CSRF helper ───────────────────────────────────────────────────────
+    function getCsrf() {
+        const match = document.cookie.match(/csrftoken=([^;]+)/);
+        return match ? match[1] : '';
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Mode toggle (Chat vs Add Tasks) ──────────────────────────────────
+    let tasksMode = true;
+
+    window.setMode = function(mode) {
+        tasksMode = mode === 'tasks';
+        const active   = 'background:#536346;color:white;';
+        const inactive = 'background:none;color:#75786f;';
+        [
+            ['mode-chat-btn',        !tasksMode],
+            ['mode-tasks-btn',        tasksMode],
+            ['mobile-mode-chat-btn', !tasksMode],
+            ['mobile-mode-tasks-btn', tasksMode],
+        ].forEach(([id, isActive]) => {
+            const el = document.getElementById(id);
+            if (el) el.style.cssText += isActive ? active : inactive;
+        });
+        const placeholder = tasksMode ? 'What tasks are on your list?' : "What's on your mind?";
+        document.querySelectorAll('.huddle-input').forEach(inp => inp.placeholder = placeholder);
+    };
+
+    // ── Priority colours ──────────────────────────────────────────────────
+    const PRIORITY_BADGE = {
+        high:   'background:rgba(220,38,38,0.1);color:#b91c1c;',
+        medium: 'background:rgba(217,119,6,0.1);color:#b45309;',
+        low:    'background:rgba(83,99,70,0.1);color:#536346;',
+    };
+
+    let currentTasks = [];
+    let currentScheduleDate = new Date().toISOString().slice(0, 10);
+
+    // ── Task preview panel ────────────────────────────────────────────────
+    function ensureTaskPreview() {
+        if (document.getElementById('secretary-task-preview')) return;
+        const panel = document.createElement('div');
+        panel.id = 'secretary-task-preview';
+        panel.style.cssText = 'display:none; padding:0 64px 0; max-width:calc(768px + 128px); margin:0 auto;';
+        panel.innerHTML = `
+            <div style="background:#f5f3ee; border-radius:16px; padding:20px 24px; margin-bottom:8px; border:1px solid rgba(197,200,189,0.3);">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <span style="font-size:12px; font-weight:700; letter-spacing:0.12em; color:#536346; text-transform:uppercase;">Tasks parsed</span>
+                        <input id="secretary-schedule-date" type="date" value="${currentScheduleDate}" min="${new Date().toISOString().slice(0, 10)}" title="Choose which day to plan" style="border:1px solid rgba(197,200,189,0.55); background:white; color:#1b1c19; border-radius:9999px; padding:7px 12px; font-size:12px; font-family:'Plus Jakarta Sans',sans-serif;" />
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <button id="secretary-schedule-btn" style="background:#536346; color:white; border:none; border-radius:9999px; padding:6px 16px; font-size:12px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif;">
+                            Generate schedule →
+                        </button>
+                        <button id="secretary-close-btn" title="Close" style="width:28px; height:28px; border-radius:50%; border:1px solid rgba(197,200,189,0.5); background:none; color:#75786f; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                            <span class="material-symbols-outlined" style="font-size:16px;">close</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="secretary-task-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+                <div id="secretary-status" style="display:none; margin-top:8px; font-size:12px; color:#536346; font-style:italic;"></div>
+            </div>`;
+
+        const inputBar = document.querySelector('.desktop-input');
+        if (inputBar) inputBar.parentNode.insertBefore(panel, inputBar);
+
+        document.getElementById('secretary-schedule-date').addEventListener('change', e => {
+            currentScheduleDate = e.target.value || new Date().toISOString().slice(0, 10);
+            currentTasks = currentTasks.map(task => ({ ...task, schedule_date: currentScheduleDate }));
+        });
+        document.getElementById('secretary-schedule-btn').addEventListener('click', generateSchedule);
+        document.getElementById('secretary-close-btn').addEventListener('click', () => {
+            panel.style.display = 'none';
+        });
+    }
+
+    function prioritySelectStyle(priorityKey) {
+        const base = 'font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;border:none;cursor:pointer;font-family:"Plus Jakarta Sans",sans-serif;outline:none;';
+        return base + (PRIORITY_BADGE[priorityKey] || PRIORITY_BADGE.medium);
+    }
+
+    function showTaskPreview(tasks) {
+        ensureTaskPreview();
+        currentTasks = tasks.map(t => ({ ...t }));
+        const list = document.getElementById('secretary-task-list');
+        list.innerHTML = tasks.map((t, i) => {
+            const priorityKey = (t.priority_key || t.priority || 'medium').toLowerCase();
+            const duration = t.duration_minutes || t.duration || 30;
+            const time = t.time || '';
+            return `
+            <div style="display:flex; align-items:center; gap:10px; padding:8px 12px; background:white; border-radius:10px; flex-wrap:wrap;">
+                <select data-idx="${i}" data-field="priority" style="${prioritySelectStyle(priorityKey)}">
+                    <option value="high"   ${priorityKey === 'high'   ? 'selected' : ''}>High</option>
+                    <option value="medium" ${priorityKey === 'medium' ? 'selected' : ''}>Medium</option>
+                    <option value="low"    ${priorityKey === 'low'    ? 'selected' : ''}>Low</option>
+                </select>
+                <span style="font-size:14px; color:#1b1c19; flex:1; min-width:80px;">${escapeHtml(t.title || t.task)}</span>
+                <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                    <input type="time" data-idx="${i}" data-field="time" value="${time}"
+                        title="Pin to a specific time (leave blank to auto-schedule)"
+                        style="font-size:12px; color:${time ? '#536346' : '#75786f'}; border:1px solid rgba(197,200,189,0.5); border-radius:6px; padding:2px 6px; font-family:'Plus Jakarta Sans',sans-serif;" />
+                    <button type="button" data-idx="${i}" data-time-auto title="Let Sanctuary choose the best open time"
+                        style="font-size:11px; color:#536346; border:1px solid rgba(148,166,132,0.35); border-radius:9999px; padding:4px 8px; background:#f5f3ee; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif;">Auto</button>
+                    <input type="number" data-idx="${i}" data-field="duration"
+                        value="${duration}" min="5" max="480"
+                        style="width:52px; font-size:12px; color:#75786f; border:1px solid rgba(197,200,189,0.5); border-radius:6px; padding:2px 6px; text-align:center; font-family:'Plus Jakarta Sans',sans-serif;" />
+                    <span style="font-size:11px; color:#75786f;">min</span>
+                </div>
+            </div>`;
+        }).join('');
+
+        list.querySelectorAll('[data-field]').forEach(el => {
+            el.addEventListener('change', () => {
+                const idx = parseInt(el.dataset.idx);
+                if (el.dataset.field === 'priority') {
+                    const val = el.value;
+                    currentTasks[idx].priority     = val.charAt(0).toUpperCase() + val.slice(1);
+                    currentTasks[idx].priority_key = val;
+                    el.style.cssText = prioritySelectStyle(val);
+                } else if (el.dataset.field === 'duration') {
+                    const val = Math.max(5, parseInt(el.value) || 30);
+                    currentTasks[idx].duration_minutes = val;
+                    currentTasks[idx].duration         = val;
+                    el.value = val;
+                } else if (el.dataset.field === 'time') {
+                    currentTasks[idx].time = el.value || null;
+                    el.style.color = el.value ? '#536346' : '#75786f';
+                }
+            });
+        });
+
+        list.querySelectorAll('[data-time-auto]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.dataset.idx, 10);
+                const input = list.querySelector(`[data-field="time"][data-idx="${idx}"]`);
+                if (input) {
+                    input.value = '';
+                    input.style.color = '#75786f';
+                }
+                currentTasks[idx].time = null;
+            });
+        });
+
+        document.getElementById('secretary-task-preview').style.display = 'block';
+    }
+
+    function setStatus(msg) {
+        const el = document.getElementById('secretary-status');
+        if (!el) return;
+        el.textContent = msg;
+        el.style.display = msg ? 'block' : 'none';
+    }
+
+    // ── POST helpers ──────────────────────────────────────────────────────
+    async function postJSON(url, body) {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+            body: JSON.stringify(body),
+        });
+        return res.json();
+    }
+
+    async function parseAndSend(text) {
+        ensureTaskPreview();
+        try {
+            const data = await postJSON('/parse-text/', { text, schedule_date: currentScheduleDate });
+            const tasks = data.data?.tasks || data.tasks || [];
+            if (tasks.length) {
+                showTaskPreview(tasks);
+                setStatus(`Found ${tasks.length} task${tasks.length !== 1 ? 's' : ''}. Set times and generate your schedule.`);
+            } else {
+                showTaskPreview([]);
+                setStatus(data.error || 'Could not parse tasks. Try listing one per line.');
+            }
+        } catch (e) {
+            setStatus('Network error — check your connection.');
+        }
+    }
+
+    async function generateSchedule() {
+        setStatus('Building your schedule…');
+        try {
+            const datedTasks = currentTasks.map(task => ({ ...task, schedule_date: task.schedule_date || currentScheduleDate }));
+            const data = await postJSON('/generate-schedule/', { tasks: datedTasks, schedule_date: currentScheduleDate });
+            const schedule = data.data?.schedule || data.schedule || [];
+            if (schedule.length) {
+                window.location.href = '/timeline/';
+            } else {
+                setStatus(data.error || 'Something went wrong generating the schedule.');
+            }
+        } catch (e) {
+            setStatus('Network error — could not generate schedule.');
+        }
+    }
+
+    // ── Image upload → backend ────────────────────────────────────────────
+    async function uploadImageToBackend(file) {
+        ensureTaskPreview();
+        const fd = new FormData();
+        fd.append('image', file);
+        fd.append('schedule_date', currentScheduleDate);
+        try {
+            const res = await fetch('/upload-image/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrf() },
+                body: fd,
+            });
+            const data = await res.json();
+            const tasks = data.data?.tasks || data.tasks || [];
+            if (tasks.length) {
+                showTaskPreview(tasks);
+                setStatus(`Extracted ${tasks.length} task${tasks.length !== 1 ? 's' : ''} from image.`);
+            } else {
+                showTaskPreview([]);
+                setStatus(data.error || 'Could not extract tasks from image.');
+            }
+        } catch (e) {
+            setStatus('Network error — image upload failed.');
+        }
+    }
+
+    // ── Intercept send: behaviour differs by mode ─────────────────────────
+    const _origSendMessage = window.sendMessage;
+    window.sendMessage = function(inputEl) {
+        const text = inputEl ? inputEl.value.trim() : '';
+        if (!text) return;
+        if (tasksMode) {
+            // Tasks mode: clear input and parse only — no chat bubble
+            inputEl.value = '';
+            inputEl.style.height = 'auto';
+            parseAndSend(text);
+        } else {
+            // Chat mode: normal bubble behaviour
+            if (_origSendMessage) _origSendMessage(inputEl);
+        }
+    };
+
+    // ── Intercept image inputs → also post to backend ─────────────────────
+    ['upload-input', 'camera-input'].forEach(id => {
+        const inp = document.getElementById(id);
+        if (!inp) return;
+        inp.addEventListener('change', () => {
+            const file = inp.files && inp.files[0];
+            if (file) uploadImageToBackend(file);
+        });
+    });
+})();
+</script>
+{% endblock %}

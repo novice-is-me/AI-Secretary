@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sanctuary - Profile &amp; Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#e4e2dd",
+                    "secondary-container": "#cde2f5",
+                    "on-secondary-fixed": "#071e2b",
+                    "on-background": "#1b1c19",
+                    "tertiary": "#645d55",
+                    "surface-container-low": "#f5f3ee",
+                    "surface-container": "#f0eee9",
+                    "error": "#ba1a1a",
+                    "on-error-container": "#93000a",
+                    "surface-bright": "#fbf9f4",
+                    "primary-fixed": "#d6e9c3",
+                    "on-secondary": "#ffffff",
+                    "surface-container-highest": "#e4e2dd",
+                    "error-container": "#ffdad6",
+                    "surface": "#fbf9f4",
+                    "inverse-primary": "#bacca8",
+                    "primary": "#536346",
+                    "on-primary-container": "#2c3b21",
+                    "primary-fixed-dim": "#bacca8",
+                    "on-tertiary": "#ffffff",
+                    "inverse-on-surface": "#f2f1ec",
+                    "background": "#fbf9f4",
+                    "secondary-fixed": "#d0e5f8",
+                    "on-tertiary-container": "#3c362f",
+                    "tertiary-fixed-dim": "#cec5ba",
+                    "tertiary-fixed": "#ebe1d6",
+                    "inverse-surface": "#30312e",
+                    "on-secondary-container": "#516575",
+                    "surface-dim": "#dbdad5",
+                    "on-primary": "#ffffff",
+                    "tertiary-container": "#a79f95",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface": "#1b1c19",
+                    "outline": "#75786f",
+                    "on-primary-fixed-variant": "#3c4b30",
+                    "on-tertiary-fixed": "#1f1b14",
+                    "surface-tint": "#536346",
+                    "on-tertiary-fixed-variant": "#4c463e",
+                    "on-error": "#ffffff",
+                    "outline-variant": "#c5c8bd",
+                    "on-secondary-fixed-variant": "#354958",
+                    "secondary-fixed-dim": "#b4c9db",
+                    "surface-container-high": "#eae8e3",
+                    "secondary": "#4d6171",
+                    "primary-container": "#94a684",
+                    "on-surface-variant": "#444840",
+                    "on-primary-fixed": "#111f08"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "40px",
+                    "timeline-gap": "32px",
+                    "xs": "4px",
+                    "xxl": "64px",
+                    "sm": "8px",
+                    "unit": "4px",
+                    "lg": "24px",
+                    "md": "16px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-shift-right {
+            box-shadow: 1px 0 0 0 rgba(0,0,0,0.05);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md h-screen overflow-hidden">
+<div class="flex h-full">
+<!-- SideNavBar Component -->
+<aside class="hidden lg:flex flex-col justify-between py-8 px-6 h-full w-64 bg-[#fdfcfb] dark:bg-[#1a1c18] border-r border-[#e8e4e0] dark:border-[#2d2f2a] tonal-shift-right shrink-0">
+<div class="space-y-12">
+<div class="flex flex-col gap-1">
+<span class="text-2xl font-semibold text-[#94A684] tracking-tight font-display-lg">Sanctuary</span>
+<span class="font-plus-jakarta-sans text-sm tracking-wide text-[#767873]">Calm Companion</span>
+</div>
+<nav class="space-y-4">
+<a class="flex items-center gap-4 px-4 py-3 rounded-full text-[#767873] hover:bg-[#f2f0ed] transition-colors ease-out-back duration-300 font-plus-jakarta-sans text-sm tracking-wide" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span>Huddle</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-full text-[#767873] hover:bg-[#f2f0ed] transition-colors ease-out-back duration-300 font-plus-jakarta-sans text-sm tracking-wide" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span>Timeline</span>
+</a>
+</nav>
+</div>
+<div class="space-y-6">
+<nav class="space-y-2">
+<a class="flex items-center gap-4 px-4 py-3 rounded-full text-[#94A684] font-bold border-r-4 border-[#94A684] bg-[#f2f0ed] font-plus-jakarta-sans text-sm tracking-wide" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span>Profile</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-full text-[#767873] hover:bg-[#f2f0ed] transition-colors ease-out-back duration-300 font-plus-jakarta-sans text-sm tracking-wide" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="flex items-center gap-3 px-4">
+<img alt="User Profile" class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYM8vKOctksgSf2cW7fdFRa2vYnkmcWCltE1Xlf3TFVFrlh67983EOCQukJU4SbgUcMgvy1tco9eS8NWfPD3QsfvvJz8ZmU7XGUNuivh4NkIYDt5p3YrBTzzG7DmHKuCIflYPQs4TjcdJiZ7VxQ5vLo_1fDWmIgyGLWTnzEN7gbVYksghBQrj-Y2nqz1tU8ZRAFI6vxlntjLyj4G0acFFRgMqSpHRK8cp9UAafGm2btsamOyZ6BAUmuQ2aR7ocTgQE2RqM0EShzIJp"/>
+<div class="flex flex-col">
+<span class="font-label-md text-on-background">Elena Moss</span>
+<span class="text-[10px] text-outline">Pro Plan</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 px-xl md:px-xxl py-xl max-w-7xl mx-auto w-full h-full overflow-y-auto">
+<!-- Profile Hero Section -->
+<section class="flex flex-col items-center text-center mb-xl mt-lg">
+<div class="relative group">
+<div class="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl shadow-[#94A684]/10 mb-md transition-transform ease-out-back duration-500 group-hover:scale-105">
+<img alt="Elena Moss" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEKKx_LNveGYkwrZFX_FhOd-isF0dMjkcvIQpC13iNpsPh2HD4IOcU7QSW4FM-iiAQX7xfFrqJnJotorPSydNtr3EZkOPqHSq_fpndTO5foeZh0Ikj9Q_jO2wv3CKOpuvON0lTvKj4XJjBVshyon3-ilBgNff0ieS8P6SeOOnhYWU6KNPgitE1W79LQIXRwP_tssPyIIKOKgUnHjp72_YmDF8yxJl9ProCY3G9ZuDEMfCuZp1D2SrPzhRciKxj1n6nTLFCGAFrOodz"/>
+</div>
+<button class="absolute bottom-0 right-0 bg-primary-container text-white p-2 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+</div>
+<h1 class="font-headline-lg text-on-background mt-md font-extrabold tracking-tight">Elena Moss</h1>
+<p class="font-body-lg text-outline mt-sm max-w-md">Curating a life of calm intention</p>
+</section>
+<!-- Content Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-timeline-gap items-start max-w-5xl mx-auto">
+<!-- Left Column: Edit Profile Form -->
+<section class="bg-surface-container-lowest p-lg rounded-lg shadow-sm border border-surface-variant/30">
+<h2 class="font-headline-md text-on-surface mb-lg">Account Details</h2>
+<form class="space-y-md">
+<div>
+<label class="block font-label-md text-outline mb-sm" for="full-name">Full Name</label>
+<input class="w-full bg-surface-container border-none rounded-md px-md py-sm font-body-md text-on-surface focus:ring-2 focus:ring-primary-container" id="full-name" type="text" value="Elena Moss"/>
+</div>
+<div>
+<label class="block font-label-md text-outline mb-sm" for="bio">Bio</label>
+<textarea class="w-full bg-surface-container border-none rounded-md px-md py-sm font-body-md text-on-surface focus:ring-2 focus:ring-primary-container resize-none" id="bio" rows="2">Curating a life of calm intention</textarea>
+</div>
+<div>
+<label class="block font-label-md text-outline mb-sm" for="email">Email</label>
+<input class="w-full bg-surface-container border-none rounded-md px-md py-sm font-body-md text-on-surface focus:ring-2 focus:ring-primary-container" id="email" type="email" value="elena.m@gmail.com"/>
+</div>
+<button class="w-full mt-lg px-xl py-md bg-primary-container text-white rounded-full font-label-md hover:opacity-90 active:scale-[0.98] transition-all" type="submit">
+                        Save Changes
+                    </button>
+</form>
+</section>
+<!-- Right Column: Calendar & Sync -->
+<div class="space-y-timeline-gap">
+<!-- Calendar Sync Card -->
+<section class="bg-surface-container-lowest p-lg rounded-lg shadow-sm border border-surface-variant/30 relative overflow-hidden">
+<div class="flex items-center justify-between mb-lg">
+<h2 class="font-headline-md text-on-surface">Calendar Sync</h2>
+<span class="px-sm py-xs bg-[#E6F4EA] text-[#137333] rounded-full font-label-sm flex items-center gap-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-[#137333]"></span>
+                                Active
+                            </span>
+</div>
+<div class="space-y-lg">
+<div class="flex items-center gap-md p-md bg-surface-container rounded-md">
+<img alt="Google Logo" class="w-10 h-10 rounded-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1Dsm3f7Ksfhe3qT6qc7uRTCDSHp6UICbB2PCe1vpARA-ofPUTPT8OOa4Wy8DsVdzUB4edSvSeSJR1iDpd9Yavn-7dz6SNFRMTsXpAiO6Kq792zf-wYIVAO-KAnQ21jxZ_g5nvY5krDF-PQ07W-OInMB2OTf9QT0j1gGL2prRp7okFUsVmJEwOrHNLYoNjc813UsbNkAmqpj-06RTSJSvrEFTZZVwqiaYWAcYCfXjmgve4zSPd4-xoOEGp2iqVnDCDZk8arDn3sYC4"/>
+<div>
+<p class="font-label-md text-on-surface">Google Calendar</p>
+<p class="text-label-sm text-outline">elena.m@gmail.com</p>
+</div>
+<button class="ml-auto text-primary font-label-md hover:underline">Manage</button>
+</div>
+<div class="flex items-center gap-md p-md bg-surface-container/50 rounded-md">
+<span class="w-10 h-10 rounded-full bg-surface flex items-center justify-center">
+<span class="material-symbols-outlined text-outline" data-icon="add">add</span>
+</span>
+<p class="font-label-md text-outline">Integrate Outlook...</p>
+</div>
+<!-- Summary Block -->
+<div class="mt-xl p-lg bg-secondary-container/20 rounded-lg border-l-4 border-secondary-container">
+<div class="flex items-center gap-lg">
+<div class="flex-1">
+<h3 class="font-label-md text-on-secondary-container mb-xs">Daily Buffer Summary</h3>
+<p class="font-body-md text-on-secondary-container/80">3 Events Buffered Today</p>
+<button class="mt-sm text-secondary font-label-sm flex items-center gap-xs">
+                                            View Timeline <span class="material-symbols-outlined text-[16px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="w-20 h-20 rounded-md overflow-hidden shadow-sm">
+<img alt="Timeline Thumbnail" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBo22ehSllDBRV68ZGMbufj6fTytP9VojXX3Sp7TLyGH-cpRKt1qi3uZEXQcA8JQps2cRuvbHItxbEPHKBgjxyzFpDht9o36jglBHy6_TUcw_f3zsYeF83Bkf2kDU1Th-8W3Y8VX-_MGIBjaqe9l1QXXYXtRvU-tiYbf9Xh0864W5GE22oTFYNjTTCw6aAIbWQZybhlKmhJLuWPx03Z9xC4PiLNOvmkd1D0vFCVYHmK5FI_atZMxJbQLoDIR33qgAlPvao8S8Gtzm6s"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+<p class="text-center text-label-sm text-outline mt-lg">Version 2.4.1 — Sanctum AI 2024</p>
+</div>
+</div>
+<!-- Persistent AI Secretary Presence -->
+<div class="fixed bottom-12 right-12 z-40">
+<div class="w-16 h-16 rounded-full bg-gradient-to-tr from-primary-container to-secondary-container blur-[1px] animate-pulse flex items-center justify-center shadow-2xl shadow-primary-container/40 group cursor-pointer transition-transform hover:scale-110">
+<div class="glass-panel w-full h-full rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="auto_awesome">auto_awesome</span>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Mobile Top Bar -->
+<header class="lg:hidden flex justify-between items-center px-6 py-4 w-full fixed top-0 z-50 bg-[#fdfcfb]/80 backdrop-blur-md">
+<span class="text-xl font-bold text-[#94A684] font-plus-jakarta-sans">Sanctuary</span>
+<button class="text-[#94A684]">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</header>
+<!-- Mobile Bottom Nav -->
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-4 bg-white/70 backdrop-blur-xl rounded-full mx-4 mb-6 shadow-xl shadow-[#94A684]/10 h-16">
+<a class="flex flex-col items-center justify-center text-[#767873] p-3 active:scale-95 transition-transform ease-out-back duration-500" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-plus-jakarta-sans text-[10px] font-medium">Huddle</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#767873] p-3 active:scale-95 transition-transform ease-out-back duration-500" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span class="font-plus-jakarta-sans text-[10px] font-medium">Timeline</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#94A684] text-white rounded-full p-3 active:scale-95 transition-transform ease-out-back duration-500" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-plus-jakarta-sans text-[10px] font-medium">Profile</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,8 @@
+<button type="button" class="flex items-center justify-center gap-sm px-xl py-md bg-ds-surface-container-lowest border border-ds-outline-variant rounded-full text-ds-on-surface font-label-md hover:bg-ds-surface-container-low transition-colors {{ extra_classes }}">
+    {% if icon_url %}
+        <img alt="{{ text }}" class="w-5 h-5 grayscale opacity-70" src="{{ icon_url }}"/>
+    {% elif icon_name %}
+        <span class="material-symbols-outlined text-[20px]">{{ icon_name }}</span>
+    {% endif %}
+    {{ text }}
+</button>
